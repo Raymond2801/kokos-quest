@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Koko's Quest — NAPLAN Literacy Adventure</title>
+<style>
+  :root{
+    --jungle:#0f2d1f;
+    --jungle2:#173f2c;
+    --leaf:#2f8f4e;
+    --leaf-bright:#4fc06e;
+    --banana:#ffd23f;
+    --banana-dark:#e0a800;
+    --wood:#8a5a2b;
+    --wood-dark:#5b3a1e;
+    --sky:#8fd7ea;
+    --coral:#ff5d5d;
+    --cream:#fff6df;
+    --ink:#1c130a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1d4a33 0%, var(--jungle) 55%, #0a1f15 100%);
+    font-family:"Trebuchet MS", Verdana, "Segoe UI", sans-serif;
+    color:var(--cream);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100dvh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow:hidden;
+    touch-action:manipulation;
+  }
+  #game-wrap{
+    position:relative;
+    width:min(96vw, 960px, calc((100dvh - 90px) * 960 / 544));
+    aspect-ratio:960/544;
+    touch-action:none;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  canvas{
+    width:100%; height:100%; display:block;
+    image-rendering:pixelated;
+    border:4px solid var(--wood-dark);
+    border-radius:10px;
+    background:var(--sky);
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+    touch-action:none;
+  }
+  /* ---------- HUD ---------- */
+  #hud{
+    position:absolute; top:8px; left:10px; right:10px;
+    display:none; justify-content:space-between; align-items:center;
+    pointer-events:none;
+    text-shadow:2px 2px 0 rgba(0,0,0,.45);
+    font-weight:bold;
+  }
+  #hud .chip{
+    background:rgba(15,45,31,.75);
+    border:2px solid rgba(255,255,255,.25);
+    border-radius:999px;
+    padding:4px 12px;
+    font-size:clamp(11px,2.2vw,15px);
+    letter-spacing:.5px;
+  }
+  #hearts{color:var(--coral); font-size:clamp(14px,2.8vw,19px); letter-spacing:2px;}
+  #bananas-hud{color:var(--banana);}
+  /* ---------- overlays ---------- */
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(8,20,14,.82);
+    border-radius:10px;
+    text-align:center;
+    padding:16px;
+    z-index:5;
+  }
+  .hidden{display:none !important;}
+  h1.logo{
+    margin:0 0 2px;
+    font-size:clamp(30px,7vw,58px);
+    letter-spacing:2px;
+    color:var(--banana);
+    text-shadow:3px 3px 0 var(--wood-dark), 6px 6px 0 rgba(0,0,0,.35);
+    transform:rotate(-2deg);
+  }
+  .subtitle{
+    margin:0 0 18px;
+    color:var(--leaf-bright);
+    font-weight:bold;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    font-size:clamp(10px,2.2vw,14px);
+  }
+  .tier-row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;}
+  .tier-card{
+    cursor:pointer;
+    width:clamp(140px,26vw,200px);
+    background:linear-gradient(180deg, #245c3c, #16402b);
+    border:3px solid var(--leaf);
+    border-radius:14px;
+    padding:14px 10px 12px;
+    color:var(--cream);
+    font-family:inherit;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .tier-card:hover, .tier-card:focus-visible{
+    transform:translateY(-4px) scale(1.03);
+    box-shadow:0 8px 20px rgba(0,0,0,.4);
+    outline:3px solid var(--banana);
+  }
+  .tier-card .t-name{font-size:clamp(15px,3vw,20px); font-weight:bold; color:var(--banana); letter-spacing:1px;}
+  .tier-card .t-age{font-size:clamp(10px,2vw,13px); margin:4px 0 6px; color:#cfe9d8;}
+  .tier-card .t-desc{font-size:clamp(9px,1.9vw,12px); color:#a8c9b5; line-height:1.35;}
+  .hint{font-size:clamp(10px,2vw,13px); color:#9fc4ad; max-width:520px; line-height:1.5;}
+  .kbd{background:#08150e; border:1px solid #3a6e50; border-radius:6px; padding:1px 7px; font-weight:bold; color:var(--banana);}
+  /* ---------- question modal ---------- */
+  #modal{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(8,20,14,.72);
+    z-index:6; border-radius:10px;
+  }
+  #modal .sign{
+    width:min(92%, 560px);
+    background:linear-gradient(180deg, #9c6a35, #7c5126);
+    border:5px solid var(--wood-dark);
+    border-radius:16px;
+    padding:18px 20px 20px;
+    box-shadow:0 14px 40px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.2);
+    animation:swing .35s ease-out;
+    transform-origin:top center;
+  }
+  @keyframes swing{
+    0%{transform:rotateX(70deg); opacity:0;}
+    100%{transform:rotateX(0); opacity:1;}
+  }
+  #modal .sign.shake{animation:shake .35s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-10px);}
+    75%{transform:translateX(10px);}
+  }
+  #q-cat{
+    display:inline-block;
+    background:var(--jungle);
+    color:var(--banana);
+    font-weight:bold; font-size:clamp(10px,2vw,13px);
+    letter-spacing:2px; text-transform:uppercase;
+    padding:4px 12px; border-radius:999px; margin-bottom:10px;
+  }
+  #q-text{
+    font-size:clamp(15px,3.2vw,21px);
+    font-weight:bold;
+    color:var(--cream);
+    text-shadow:1px 1px 0 rgba(0,0,0,.4);
+    margin:0 0 14px;
+    line-height:1.4;
+  }
+  .opt{
+    display:block; width:100%;
+    min-height:48px;
+    margin:8px 0;
+    padding:12px 14px;
+    font-family:inherit; font-size:clamp(14px,2.8vw,18px); font-weight:bold;
+    color:var(--ink);
+    background:var(--cream);
+    border:3px solid var(--wood-dark);
+    border-radius:12px;
+    cursor:pointer;
+    transition:transform .1s ease, background .1s ease;
+    text-align:center;
+  }
+  .opt:hover, .opt:focus-visible{transform:scale(1.02); background:#fffceb; outline:3px solid var(--banana);}
+  .opt.correct{background:var(--leaf-bright); color:#0b2617; border-color:#1d5c36;}
+  .opt.wrong{background:var(--coral); color:#fff; border-color:#9c2c2c;}
+  #q-feedback{min-height:22px; margin-top:8px; font-weight:bold; font-size:clamp(12px,2.4vw,16px); color:var(--banana);}
+  /* ---------- result screens ---------- */
+  .big-emoji{font-size:clamp(40px,9vw,72px); margin-bottom:6px;}
+  .stats{
+    display:flex; gap:18px; justify-content:center; margin:12px 0 18px; flex-wrap:wrap;
+  }
+  .stat{
+    background:rgba(255,255,255,.08);
+    border:2px solid rgba(255,255,255,.2);
+    border-radius:12px; padding:10px 18px;
+  }
+  .stat .v{font-size:clamp(20px,4.5vw,30px); font-weight:bold; color:var(--banana);}
+  .stat .l{font-size:clamp(9px,1.9vw,12px); text-transform:uppercase; letter-spacing:1.5px; color:#a8c9b5;}
+  .btn{
+    cursor:pointer;
+    font-family:inherit; font-weight:bold;
+    font-size:clamp(14px,3vw,19px);
+    letter-spacing:1px;
+    color:var(--ink);
+    background:linear-gradient(180deg, var(--banana), var(--banana-dark));
+    border:3px solid var(--wood-dark);
+    border-radius:999px;
+    padding:12px 30px;
+    margin:6px;
+    box-shadow:0 5px 0 var(--wood-dark);
+    transition:transform .1s ease, box-shadow .1s ease;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 7px 0 var(--wood-dark);}
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--wood-dark);}
+  .btn.secondary{background:linear-gradient(180deg,#3fa565,#2b7648); color:var(--cream);}
+  /* ---------- toast ---------- */
+  #toast{
+    position:absolute; top:52px; left:50%;
+    transform:translateX(-50%);
+    background:var(--jungle);
+    border:3px solid var(--banana);
+    color:var(--cream);
+    font-weight:bold; font-size:clamp(11px,2.4vw,15px);
+    padding:10px 18px; border-radius:999px;
+    z-index:7;
+    box-shadow:0 6px 20px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease, top .3s ease;
+    text-align:center; max-width:86%;
+  }
+  #toast.show{opacity:1; top:60px;}
+  /* ---------- touch controls (overlay on top of canvas) ---------- */
+  #touch{
+    display:none;
+    position:absolute; inset:0;
+    z-index:4;                 /* under overlays/modal(5/6) so it hides behind them, above canvas */
+    pointer-events:none;
+    touch-action:none;
+  }
+  .tzone{
+    position:absolute;
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    display:flex; gap:14px;
+    pointer-events:auto;
+  }
+  .tzone.left{ left:calc(16px + env(safe-area-inset-left)); }
+  .tzone.right{ right:calc(16px + env(safe-area-inset-right)); }
+  .tbtn{
+    width:clamp(56px,14vw,80px); height:clamp(56px,14vw,80px);
+    border-radius:50%;
+    background:rgba(255,246,223,.15);
+    border:3px solid rgba(255,246,223,.4);
+    color:var(--cream);
+    font-size:clamp(22px,6vw,30px);
+    font-weight:bold;
+    display:flex; align-items:center; justify-content:center;
+    touch-action:none;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  .tbtn.pressed{background:rgba(255,210,63,.4); border-color:var(--banana);}
+  #btn-jump{
+    width:clamp(64px,17vw,88px); height:clamp(64px,17vw,88px);
+    font-size:clamp(26px,7vw,36px);
+  }
+  @media (pointer:coarse){ #touch{display:block;} }
+  footer{
+    margin-top:8px; font-size:11px; color:#5f8a70; letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrap">
+  <canvas id="cv" width="960" height="544"></canvas>
+
+  <div id="hud">
+    <span class="chip" id="hearts">♥ ♥ ♥</span>
+    <span class="chip" id="level-name">Jungle Trail</span>
+    <span class="chip" id="bananas-hud">🍌 0</span>
+    <span class="chip" id="tier-hud">Explorer</span>
+  </div>
+
+  <!-- Title / tier select -->
+  <div class="overlay" id="screen-title">
+    <h1 class="logo">KOKO'S QUEST</h1>
+    <p class="subtitle">A jungle spelling &amp; grammar adventure</p>
+    <div class="tier-row">
+      <button class="tier-card" data-tier="0">
+        <div class="t-name">🐒 Explorer</div>
+        <div class="t-age">Ages 6–8 · Year 1–2</div>
+        <div class="t-desc">Simple words and easy sentences to get started.</div>
+      </button>
+      <button class="tier-card" data-tier="1">
+        <div class="t-name">🌴 Adventurer</div>
+        <div class="t-age">Ages 8–10 · Year 3–4</div>
+        <div class="t-desc">NAPLAN Year 3 spelling and grammar challenges.</div>
+      </button>
+      <button class="tier-card" data-tier="2">
+        <div class="t-name">👑 Champion</div>
+        <div class="t-age">Ages 10–12 · Year 5–6</div>
+        <div class="t-desc">Tricky NAPLAN Year 5 words for word masters.</div>
+      </button>
+    </div>
+    <p class="hint">
+      Run with <span class="kbd">◀</span> <span class="kbd">▶</span>, jump with <span class="kbd">Space</span>.
+      Answer the questions at each door to open it. Collect bananas, dodge the spikes, reach the flag!
+    </p>
+  </div>
+
+  <!-- Question modal -->
+  <div id="modal" class="hidden">
+    <div class="sign" id="sign">
+      <span id="q-cat">Spelling</span>
+      <p id="q-text">Which word is spelled correctly?</p>
+      <div id="q-opts"></div>
+      <div id="q-feedback"></div>
+    </div>
+  </div>
+
+  <!-- Level complete -->
+  <div class="overlay hidden" id="screen-level">
+    <div class="big-emoji">🎉</div>
+    <h1 class="logo" style="font-size:clamp(22px,5vw,40px)">LEVEL COMPLETE!</h1>
+    <div class="stats">
+      <div class="stat"><div class="v" id="lv-bananas">0</div><div class="l">Bananas</div></div>
+      <div class="stat"><div class="v" id="lv-acc">100%</div><div class="l">Correct answers</div></div>
+    </div>
+    <button class="btn" id="btn-next">Next level ▶</button>
+  </div>
+
+  <!-- Game over -->
+  <div class="overlay hidden" id="screen-over">
+    <div class="big-emoji">💫</div>
+    <h1 class="logo" style="font-size:clamp(22px,5vw,40px); color:var(--coral)">OUCH!</h1>
+    <p class="hint" style="margin-bottom:14px">Koko is out of hearts. Every explorer slips sometimes — try this level again!</p>
+    <button class="btn" id="btn-retry">Try again</button>
+    <button class="btn secondary" id="btn-menu-1">Main menu</button>
+  </div>
+
+  <!-- Victory -->
+  <div class="overlay hidden" id="screen-win">
+    <div class="big-emoji">🏆</div>
+    <h1 class="logo" style="font-size:clamp(24px,5.5vw,44px)">QUEST COMPLETE!</h1>
+    <p class="subtitle">Koko made it through the whole jungle!</p>
+    <div class="stats">
+      <div class="stat"><div class="v" id="win-bananas">0</div><div class="l">Total bananas</div></div>
+      <div class="stat"><div class="v" id="win-acc">100%</div><div class="l">Correct answers</div></div>
+      <div class="stat"><div class="v" id="win-tier">Explorer</div><div class="l">Tier</div></div>
+    </div>
+    <button class="btn" id="btn-again">Play again</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Touch controls (overlay, touch devices only) -->
+  <div id="touch">
+    <div class="tzone left">
+      <div class="tbtn" id="btn-left">◀</div>
+      <div class="tbtn" id="btn-right">▶</div>
+    </div>
+    <div class="tzone right">
+      <div class="tbtn" id="btn-jump">⤒</div>
+    </div>
+  </div>
+</div>
+
+<footer>KOKO'S QUEST v1.0 · NAPLAN-aligned literacy practice</footer>
+
+<script>
+"use strict";
+/* =====================================================================
+   KOKO'S QUEST v1.0
+   Single-file 2D pixel platformer for NAPLAN literacy practice.
+   Everything is Canvas-drawn — no external assets.
+   ===================================================================== */
+
+/* ---------------- Question banks (3 tiers) ---------------- */
+const SPELL_Q = "Which word is spelled correctly?";
+const TIERS = [
+  {
+    name: "Explorer", years: "Year 1–2",
+    spelling: [
+      {opts:["fich","fish","fesh"],a:1},
+      {opts:["jump","jamp","jumb"],a:0},
+      {opts:["sip","shipp","ship"],a:2},
+      {opts:["tree","trea","tre"],a:0},
+      {opts:["rane","rain","ren"],a:1},
+      {opts:["buk","booke","book"],a:2},
+      {opts:["frog","frogg","forg"],a:0},
+      {opts:["melk","milk","milc"],a:1},
+      {opts:["star","sdar","starr"],a:0},
+      {opts:["caik","kake","cake"],a:2},
+      {opts:["duk","duck","dack"],a:1},
+      {opts:["swimm","swim","suim"],a:1},
+      {opts:["hend","hand","hande"],a:1},
+      {opts:["plai","play","pley"],a:1},
+    ],
+    grammar: [
+      {q:"Pick the correct sentence.",opts:["the cat sleeps.","The cat sleeps.","the Cat sleeps."],a:1},
+      {q:"Pick the correct sentence.",opts:["I am six.","i am six.","I am six"],a:0},
+      {q:"Choose the correct word: The dog ___ fast.",opts:["run","runs","running"],a:1},
+      {q:"Choose the correct word: I ___ an apple.",opts:["eat","eats","eating"],a:0},
+      {q:"Which one is a question?",opts:["Where is my hat?","Where is my hat.","where is my hat"],a:0},
+      {q:"Choose the correct word: We ___ happy.",opts:["is","are","am"],a:1},
+      {q:"Pick the correct sentence.",opts:["My name is Koko.","my name is koko.","My Name Is koko."],a:0},
+      {q:"Choose the correct word: She ___ a book.",opts:["reading","reads","red"],a:1},
+    ]
+  },
+  {
+    name: "Adventurer", years: "Year 3–4",
+    spelling: [
+      {opts:["becuase","because","becos"],a:1},
+      {opts:["freind","frend","friend"],a:2},
+      {opts:["beautiful","beutiful","beautifull"],a:0},
+      {opts:["scool","school","schol"],a:1},
+      {opts:["peaple","peeple","people"],a:2},
+      {opts:["agen","again","agian"],a:1},
+      {opts:["animal","aminal","animel"],a:0},
+      {opts:["laff","lagh","laugh"],a:2},
+      {opts:["togather","together","togethor"],a:1},
+      {opts:["thort","thuoght","thought"],a:2},
+      {opts:["favorite","favourite","favrite"],a:1},
+      {opts:["color","colour","coulor"],a:1},
+      {opts:["caught","cought","cort"],a:0},
+      {opts:["diffrent","different","diferent"],a:1},
+    ],
+    grammar: [
+      {q:"Choose the correct word: Yesterday we ___ to the park.",opts:["go","went","gone"],a:1},
+      {q:"Choose the correct word: There are three ___.",opts:["childs","children","childrens"],a:1},
+      {q:"Pick the correct sentence.",opts:["Sam and I went home.","Sam and me went home.","Me and Sam goed home."],a:0},
+      {q:"Choose the correct word: The birds ___ singing.",opts:["was","is","were"],a:2},
+      {q:"Which word is a verb? \"The monkey climbs the tall tree.\"",opts:["monkey","climbs","tall"],a:1},
+      {q:"Choose the correct word: I didn't do ___.",opts:["nothing","anything","nothings"],a:1},
+      {q:"Where does the comma go? \"I bought apples bananas and grapes.\"",opts:["after apples","after and","no comma needed"],a:0},
+      {q:"Choose the correct word: This book is ___ than that one.",opts:["gooder","better","more good"],a:1},
+    ]
+  },
+  {
+    name: "Champion", years: "Year 5–6",
+    spelling: [
+      {opts:["neccessary","necessary","necesary"],a:1},
+      {opts:["enviroment","environment","environmant"],a:1},
+      {opts:["definately","definitly","definitely"],a:2},
+      {opts:["seperate","separate","separete"],a:1},
+      {opts:["beleive","belive","believe"],a:2},
+      {opts:["recieve","receive","reseive"],a:1},
+      {opts:["occasion","ocassion","occassion"],a:0},
+      {opts:["dissapear","disappear","disapear"],a:1},
+      {opts:["embarassed","embarrassed","embarased"],a:1},
+      {opts:["immediatly","imediately","immediately"],a:2},
+      {opts:["goverment","government","govermant"],a:1},
+      {opts:["knowlege","knowledge","nowledge"],a:1},
+      {opts:["foriegn","foreign","forein"],a:1},
+      {opts:["acheive","achieve","achive"],a:1},
+    ],
+    grammar: [
+      {q:"Choose the correct word: The team celebrated ___ victory.",opts:["it's","its","its'"],a:1},
+      {q:"Choose the correct word: ___ going to the beach tomorrow.",opts:["Their","There","They're"],a:2},
+      {q:"Pick the correct sentence.",opts:["Although it rained, we played outside.","Although it rained we played outside","Although, it rained we played outside."],a:0},
+      {q:"Choose the correct word: Neither of the boys ___ finished.",opts:["have","has","having"],a:1},
+      {q:"Which sentence uses the apostrophe correctly?",opts:["The dogs' bowls were empty.","The dogs bowl's were empty.","The dog's were hungry."],a:0},
+      {q:"Choose the correct word: She spoke ___ than her brother.",opts:["more quietly","quietlier","most quietly"],a:0},
+      {q:"Which word is an adverb? \"Koko quickly climbed the ancient tower.\"",opts:["quickly","ancient","tower"],a:0},
+      {q:"Choose the correct word: The books ___ on the shelf are mine.",opts:["who are","which is","that are"],a:2},
+    ]
+  }
+];
+
+/* ---------------- Levels (tile maps) ----------------
+   Legend:  # ground   = platform   D door   B banana
+            ^ spikes   P start      F finish flag   . empty
+   Each cell = 32 px. Rows are auto-padded to equal width.        */
+const LEVELS = [
+  { name:"1 · Jungle Trail", map:[
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "................................................................",
+    "............B................B..................................",
+    "...........===..............===................................",
+    "................................................................",
+    "........B................B...................B..................",
+    ".......===..............===.................===.................",
+    "....B.B...............B..................B............B.B.......",
+    ".P................D..............^^.............D...........F...",
+    "####################################...#########################",
+    "####################################...#########################"
+  ]},
+  { name:"2 · Canopy Climb", map:[
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    "........................................................................",
+    ".............B...................B......................................",
+    "............===.................===.....................................",
+    "........................................................................",
+    ".........B...................B...............................B.........",
+    "........===.................===.............................===........",
+    ".....B............B.....................B.......B................B......",
+    ".P............D.........^^........D.........^^..........D........F....",
+    "####################...###########################...##################",
+    "####################...###########################...##################"
+  ]},
+  { name:"3 · Temple of Words", map:[
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "................................................................................",
+    "...............B................................................................",
+    "..............===...............................................................",
+    "................................................................................",
+    ".......B.............................B......................B..................",
+    "......===...........................===....................===.................",
+    "....B............................B.....................B.................B.....",
+    ".P........^^........D.........^^..........D.........^^..........D...........F...",
+    "########################...###################...###################...#########",
+    "########################...###################...###################...#########"
+  ]}
+];
+
+/* ---------------- DOM refs ---------------- */
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+const $ = id => document.getElementById(id);
+const hud = $("hud"), heartsEl = $("hearts"), bananasEl = $("bananas-hud"),
+      levelNameEl = $("level-name"), tierHudEl = $("tier-hud"),
+      modal = $("modal"), sign = $("sign"), qCat = $("q-cat"),
+      qText = $("q-text"), qOpts = $("q-opts"), qFeedback = $("q-feedback"),
+      toast = $("toast");
+
+/* ---------------- Game state ---------------- */
+const TILE = 32, GRAV = 0.55, JUMP_V = -11.6, MOVE = 3.2, MAX_FALL = 13;
+let state = "title";          // title | play | question | levelDone | over | win
+let tier = 0;
+let levelIdx = 0;
+let G = null;                 // parsed level data
+let player = null;
+let camX = 0;
+let hearts = 3, bananasTotal = 0, bananasLevel = 0;
+let answered = 0, correct = 0, streak = 0, streakToastShown = false;
+let qQueue = [];              // shuffled question queue for this tier
+let activeDoor = null;
+let frameCount = 0;
+let particles = [];
+let clouds = [];
+
+const keys = {left:false, right:false, jump:false, jumpHeld:false};
+
+/* ---------------- Helpers ---------------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function refillQueue(){
+  const t = TIERS[tier];
+  const pool = [
+    ...t.spelling.map(it => ({type:"Spelling", q:SPELL_Q, opts:it.opts, a:it.a})),
+    ...t.grammar .map(it => ({type:"Grammar",  q:it.q,    opts:it.opts, a:it.a}))
+  ];
+  qQueue = shuffle(pool);
+}
+function nextQuestion(){
+  if (!qQueue.length) refillQueue();
+  return qQueue.pop();
+}
+function showToast(msg, ms=3200){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toast.classList.remove("show"), ms);
+}
+
+/* ---------------- Level parsing ---------------- */
+function loadLevel(idx){
+  const src = LEVELS[idx];
+  const rows = src.map.slice();
+  const w = Math.max(...rows.map(r=>r.length));
+  // pad each row with its own last character so ground rows extend with '#'
+  const grid = rows.map(r => r.padEnd(w, r.length ? r[r.length-1] : ".").split(""));
+
+  G = {
+    name: src.name, w, h: grid.length, grid,
+    doors: [], bananas: [], spikes: [], flag: null, start: {x:64,y:0}
+  };
+  for (let y=0; y<G.h; y++){
+    for (let x=0; x<w; x++){
+      const c = grid[y][x];
+      if (c==="P"){ G.start = {x:x*TILE+4, y:y*TILE}; grid[y][x]="."; }
+      else if (c==="D"){ G.doors.push({x:x*TILE, y:(y-1)*TILE, w:TILE, h:TILE*2, open:false, wobble:0}); grid[y][x]="."; }
+      else if (c==="B"){ G.bananas.push({x:x*TILE+6, y:y*TILE+6, got:false, bob:Math.random()*6.28}); grid[y][x]="."; }
+      else if (c==="^"){ G.spikes.push({x:x*TILE, y:y*TILE+16, w:TILE, h:16}); grid[y][x]="."; }
+      else if (c==="F"){ G.flag = {x:x*TILE+8, y:(y-2)*TILE}; grid[y][x]="."; }
+    }
+  }
+  player = {
+    x:G.start.x, y:G.start.y, w:22, h:28,
+    vx:0, vy:0, onGround:false, facing:1, frame:0, invuln:0
+  };
+  player.checkpoint = {x:player.x, y:player.y};
+  camX = 0; bananasLevel = 0; particles = [];
+  clouds = Array.from({length:6},(_,i)=>({x:Math.random()*w*TILE, y:20+Math.random()*120, s:.6+Math.random()*.9}));
+  levelNameEl.textContent = src.name;
+  updateHUD();
+}
+function isSolidTile(tx, ty){
+  if (tx<0 || tx>=G.w) return true;             // level edges are walls
+  if (ty<0) return false;
+  if (ty>=G.h) return false;                    // open bottom = pit
+  const c = G.grid[ty][tx];
+  return c==="#" || c==="=";
+}
+function solidAt(px, py){                        // pixel query incl. closed doors
+  if (isSolidTile(Math.floor(px/TILE), Math.floor(py/TILE))) return true;
+  return false;
+}
+
+/* ---------------- Physics ---------------- */
+function rectsOverlap(a,b){
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+function collideAxis(p, dx, dy){
+  // move & resolve against tile grid + closed doors
+  p.x += dx; p.y += dy;
+  const solids = [];
+  const x0 = Math.floor(p.x/TILE)-1, x1 = Math.floor((p.x+p.w)/TILE)+1;
+  const y0 = Math.floor(p.y/TILE)-1, y1 = Math.floor((p.y+p.h)/TILE)+1;
+  for (let ty=y0; ty<=y1; ty++)
+    for (let tx=x0; tx<=x1; tx++)
+      if (isSolidTile(tx,ty)) solids.push({x:tx*TILE, y:ty*TILE, w:TILE, h:TILE});
+  // closed doors block the whole corridor (magic vines above the door),
+  // so the question can never be skipped by jumping over
+  for (const d of G.doors) if (!d.open) solids.push({x:d.x, y:0, w:d.w, h:d.y+d.h});
+
+  for (const s of solids){
+    if (!rectsOverlap(p, s)) continue;
+    if (dx > 0){ p.x = s.x - p.w; p.vx = 0; }
+    else if (dx < 0){ p.x = s.x + s.w; p.vx = 0; }
+    if (dy > 0){ p.y = s.y - p.h; p.vy = 0; p.onGround = true; }
+    else if (dy < 0){ p.y = s.y + s.h; p.vy = 0; }
+  }
+}
+function hurt(){
+  if (player.invuln > 0) return;
+  hearts--;
+  updateHUD();
+  burst(player.x+player.w/2, player.y+player.h/2, "#ff5d5d", 14);
+  if (hearts <= 0){ gameOver(); return; }
+  player.x = player.checkpoint.x;
+  player.y = player.checkpoint.y;
+  player.vx = 0; player.vy = 0;
+  player.invuln = 60;
+}
+function update(){
+  frameCount++;
+  if (state !== "play") return;
+  const p = player;
+  if (p.invuln > 0) p.invuln--;
+
+  // horizontal input
+  p.vx = (keys.right?MOVE:0) - (keys.left?MOVE:0);
+  if (p.vx !== 0) p.facing = Math.sign(p.vx);
+  // jump
+  if (keys.jump && p.onGround && !keys.jumpHeld){
+    p.vy = JUMP_V; p.onGround = false; keys.jumpHeld = true;
+    burst(p.x+p.w/2, p.y+p.h, "#cfe9d8", 5);
+  }
+  if (!keys.jump) keys.jumpHeld = false;
+  // gravity
+  p.vy = Math.min(p.vy + GRAV, MAX_FALL);
+
+  p.onGround = false;
+  collideAxis(p, p.vx, 0);
+  collideAxis(p, 0, p.vy);
+
+  if (p.vx !== 0 && p.onGround) p.frame += 0.22;
+
+  // fell into a pit
+  if (p.y > G.h*TILE + 80) hurt();
+
+  // spikes
+  for (const s of G.spikes)
+    if (rectsOverlap(p, s)) { hurt(); break; }
+
+  // bananas
+  for (const b of G.bananas){
+    if (b.got) continue;
+    if (rectsOverlap(p, {x:b.x, y:b.y, w:20, h:20})){
+      b.got = true; bananasLevel++; bananasTotal++;
+      burst(b.x+10, b.y+10, "#ffd23f", 10);
+      updateHUD();
+    }
+  }
+
+  // doors — touching a closed door triggers a question
+  for (const d of G.doors){
+    if (d.open) continue;
+    const near = {x:d.x-6, y:0, w:d.w+12, h:d.y+d.h};
+    if (rectsOverlap(p, near)){ openQuestion(d); break; }
+  }
+
+  // flag
+  if (G.flag && rectsOverlap(p, {x:G.flag.x, y:G.flag.y, w:16, h:64}))
+    levelComplete();
+
+  // camera follows
+  const target = p.x + p.w/2 - cv.width/2;
+  camX += (target - camX) * 0.12;
+  camX = Math.max(0, Math.min(camX, G.w*TILE - cv.width));
+
+  // particles
+  for (const pt of particles){
+    pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.12; pt.life--;
+  }
+  particles = particles.filter(pt => pt.life > 0);
+}
+function burst(x, y, color, n){
+  for (let i=0;i<n;i++)
+    particles.push({x, y, vx:(Math.random()-.5)*4, vy:-Math.random()*3-1, life:24+Math.random()*16, color});
+}
+
+/* ---------------- Questions ---------------- */
+function openQuestion(door){
+  state = "question";
+  activeDoor = door;
+  presentQuestion();
+  modal.classList.remove("hidden");
+}
+function presentQuestion(){
+  const item = nextQuestion();
+  // shuffle displayed options so retries aren't memorised by position
+  const order = shuffle(item.opts.map((_,i)=>i));
+  qCat.textContent = item.type;
+  qText.textContent = item.q;
+  qFeedback.textContent = "";
+  qOpts.innerHTML = "";
+  order.forEach(origIdx=>{
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.textContent = item.opts[origIdx];
+    btn.onclick = ()=>answer(btn, origIdx === item.a);
+    qOpts.appendChild(btn);
+  });
+}
+function answer(btn, isCorrect){
+  answered++;
+  [...qOpts.children].forEach(b=>b.onclick=null);
+  if (isCorrect){
+    correct++; streak++;
+    btn.classList.add("correct");
+    qFeedback.textContent = "✔ Great job!";
+    setTimeout(()=>{
+      activeDoor.open = true;
+      player.checkpoint = {x:activeDoor.x + activeDoor.w + 4, y:activeDoor.y + activeDoor.h - player.h};
+      burst(activeDoor.x+16, activeDoor.y+32, "#4fc06e", 16);
+      modal.classList.add("hidden");
+      state = "play";
+      if (streak >= 5 && tier < 2 && !streakToastShown){
+        streakToastShown = true;
+        showToast(`🔥 5 in a row! Ready to try ${TIERS[tier+1].name} next time?`, 4200);
+      }
+      updateHUD();
+    }, 650);
+  } else {
+    streak = 0;
+    btn.classList.add("wrong");
+    hearts--;
+    updateHUD();
+    sign.classList.remove("shake"); void sign.offsetWidth; sign.classList.add("shake");
+    if (hearts <= 0){
+      qFeedback.textContent = "✘ Oh no!";
+      setTimeout(()=>{ modal.classList.add("hidden"); gameOver(); }, 700);
+    } else {
+      qFeedback.textContent = "✘ Not quite — here's another one!";
+      setTimeout(presentQuestion, 900);
+    }
+  }
+}
+
+/* ---------------- Flow ---------------- */
+function startGame(t){
+  tier = t;
+  levelIdx = 0;
+  hearts = 3; bananasTotal = 0; answered = 0; correct = 0; streak = 0; streakToastShown = false;
+  refillQueue();
+  tierHudEl.textContent = TIERS[tier].name;
+  $("screen-title").classList.add("hidden");
+  hud.style.display = "flex";
+  loadLevel(levelIdx);
+  state = "play";
+}
+function levelComplete(){
+  state = "levelDone";
+  $("lv-bananas").textContent = bananasLevel;
+  $("lv-acc").textContent = answered ? Math.round(correct/answered*100)+"%" : "100%";
+  $("btn-next").textContent = (levelIdx < LEVELS.length-1) ? "Next level ▶" : "Finish quest 🏆";
+  $("screen-level").classList.remove("hidden");
+}
+function gameOver(){
+  state = "over";
+  $("screen-over").classList.remove("hidden");
+}
+function winGame(){
+  state = "win";
+  $("win-bananas").textContent = bananasTotal;
+  $("win-acc").textContent = answered ? Math.round(correct/answered*100)+"%" : "100%";
+  $("win-tier").textContent = TIERS[tier].name;
+  $("screen-win").classList.remove("hidden");
+}
+function updateHUD(){
+  heartsEl.textContent = "♥ ".repeat(Math.max(hearts,0)).trim() + (hearts<3 ? " " + "♡ ".repeat(3-hearts).trim() : "");
+  bananasEl.textContent = "🍌 " + bananasTotal;
+}
+
+$("btn-next").onclick = ()=>{
+  $("screen-level").classList.add("hidden");
+  if (levelIdx < LEVELS.length-1){
+    levelIdx++;
+    hearts = Math.min(hearts+1, 3);      // small mercy heart between levels
+    loadLevel(levelIdx);
+    state = "play";
+  } else winGame();
+};
+$("btn-retry").onclick = ()=>{
+  $("screen-over").classList.add("hidden");
+  hearts = 3;
+  loadLevel(levelIdx);
+  state = "play";
+};
+$("btn-menu-1").onclick = ()=>{ $("screen-over").classList.add("hidden"); backToTitle(); };
+$("btn-again").onclick = ()=>{ $("screen-win").classList.add("hidden"); backToTitle(); };
+function backToTitle(){
+  state = "title";
+  hud.style.display = "none";
+  $("screen-title").classList.remove("hidden");
+}
+document.querySelectorAll(".tier-card").forEach(b=>{
+  b.onclick = ()=>startGame(parseInt(b.dataset.tier,10));
+});
+
+/* ---------------- Input ---------------- */
+window.addEventListener("keydown", e=>{
+  if (["ArrowLeft","ArrowRight","ArrowUp","Space"].includes(e.code)) e.preventDefault();
+  if (e.code==="ArrowLeft"  || e.code==="KeyA") keys.left = true;
+  if (e.code==="ArrowRight" || e.code==="KeyD") keys.right = true;
+  if (e.code==="ArrowUp" || e.code==="Space" || e.code==="KeyW") keys.jump = true;
+});
+window.addEventListener("keyup", e=>{
+  if (e.code==="ArrowLeft"  || e.code==="KeyA") keys.left = false;
+  if (e.code==="ArrowRight" || e.code==="KeyD") keys.right = false;
+  if (e.code==="ArrowUp" || e.code==="Space" || e.code==="KeyW") keys.jump = false;
+});
+function bindTouch(id, key){
+  const el = $(id);
+  const press = e=>{
+    e.preventDefault();
+    if (el.setPointerCapture) el.setPointerCapture(e.pointerId);
+    keys[key] = true;
+    el.classList.add("pressed");
+  };
+  const release = e=>{
+    e.preventDefault();
+    keys[key] = false;
+    el.classList.remove("pressed");
+  };
+  el.addEventListener("pointerdown", press);
+  el.addEventListener("pointerup", release);
+  el.addEventListener("pointercancel", release);
+  el.addEventListener("pointerleave", release);
+}
+bindTouch("btn-left","left");
+bindTouch("btn-right","right");
+bindTouch("btn-jump","jump");
+// stop page scroll / rubber-band while touching inside the game area
+$("game-wrap").addEventListener("touchmove", e=>{
+  if (!e.target.closest("#modal")) e.preventDefault();
+}, {passive:false});
+
+/* ---------------- Rendering ---------------- */
+function draw(){
+  const W = cv.width, H = cv.height;
+  // sky
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,"#aee6f5"); sky.addColorStop(.6,"#8fd7ea"); sky.addColorStop(1,"#cdeee0");
+  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+  // sun
+  ctx.fillStyle = "#fff2b0";
+  ctx.beginPath(); ctx.arc(W-120, 80, 42, 0, 6.29); ctx.fill();
+
+  if (!G){ requestAnimationFrame(loop); return; }
+
+  // clouds (slow parallax)
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  for (const c of clouds){
+    const cx = ((c.x - camX*0.15) % (G.w*TILE) + G.w*TILE) % (G.w*TILE) - 60;
+    drawCloud(cx, c.y, c.s);
+  }
+  // far jungle silhouettes
+  drawHills(camX*0.3, "#5aa878", H-150, 90);
+  drawHills(camX*0.55 + 300, "#3c8a5c", H-110, 70);
+
+  ctx.save();
+  ctx.translate(-Math.round(camX), 0);
+
+  // tiles
+  const tx0 = Math.floor(camX/TILE)-1, tx1 = Math.floor((camX+W)/TILE)+1;
+  for (let ty=0; ty<G.h; ty++){
+    for (let tx=Math.max(0,tx0); tx<=Math.min(G.w-1,tx1); tx++){
+      const c = G.grid[ty][tx];
+      if (c==="#") drawGround(tx*TILE, ty*TILE, ty===0 || G.grid[ty-1][tx]!=="#");
+      else if (c==="=") drawPlatform(tx*TILE, ty*TILE);
+    }
+  }
+  // spikes
+  for (const s of G.spikes) drawSpikes(s);
+  // flag
+  if (G.flag) drawFlag(G.flag);
+  // bananas
+  for (const b of G.bananas){
+    if (b.got) continue;
+    const bob = Math.sin(frameCount*0.06 + b.bob)*3;
+    drawBanana(b.x, b.y + bob);
+  }
+  // doors
+  for (const d of G.doors) drawDoor(d);
+  // particles
+  for (const pt of particles){
+    ctx.globalAlpha = Math.max(pt.life/40, 0);
+    ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x, pt.y, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+  // player
+  if (!(player.invuln > 0 && Math.floor(frameCount/4)%2===0))
+    drawKoko(player);
+
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+function drawCloud(x,y,s){
+  ctx.beginPath();
+  ctx.arc(x, y, 18*s, 0, 6.29);
+  ctx.arc(x+22*s, y-8*s, 22*s, 0, 6.29);
+  ctx.arc(x+48*s, y, 17*s, 0, 6.29);
+  ctx.fill();
+}
+function drawHills(offset, color, baseY, amp){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, cv.height);
+  for (let x=0; x<=cv.width; x+=8){
+    const y = baseY - Math.abs(Math.sin((x+offset)*0.012))*amp;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(cv.width, cv.height);
+  ctx.fill();
+}
+function drawGround(x,y,top){
+  ctx.fillStyle = "#7a4a26";
+  ctx.fillRect(x,y,TILE,TILE);
+  ctx.fillStyle = "#5b3517";
+  ctx.fillRect(x+4,y+10,6,6); ctx.fillRect(x+18,y+20,8,5);
+  if (top){
+    ctx.fillStyle = "#2f8f4e"; ctx.fillRect(x,y,TILE,10);
+    ctx.fillStyle = "#4fc06e";
+    ctx.fillRect(x+2,y,4,6); ctx.fillRect(x+12,y,4,8); ctx.fillRect(x+22,y,4,5);
+  }
+}
+function drawPlatform(x,y){
+  ctx.fillStyle = "#8a5a2b"; ctx.fillRect(x,y+4,TILE,14);
+  ctx.fillStyle = "#5b3a1e"; ctx.fillRect(x,y+14,TILE,4);
+  ctx.fillStyle = "#4fc06e"; ctx.fillRect(x,y+2,TILE,5);
+}
+function drawSpikes(s){
+  ctx.fillStyle = "#c9ced4";
+  const n = s.w/8;
+  for (let i=0;i<n;i++){
+    ctx.beginPath();
+    ctx.moveTo(s.x+i*8,     s.y+s.h);
+    ctx.lineTo(s.x+i*8+4,   s.y);
+    ctx.lineTo(s.x+i*8+8,   s.y+s.h);
+    ctx.fill();
+  }
+}
+function drawFlag(f){
+  ctx.fillStyle = "#5b3a1e"; ctx.fillRect(f.x, f.y, 5, 64);
+  const wave = Math.sin(frameCount*0.1)*3;
+  ctx.fillStyle = "#ffd23f";
+  ctx.beginPath();
+  ctx.moveTo(f.x+5, f.y+4);
+  ctx.lineTo(f.x+40+wave, f.y+14);
+  ctx.lineTo(f.x+5, f.y+26);
+  ctx.fill();
+  ctx.fillStyle = "#7a4a26";
+  ctx.fillRect(f.x+14, f.y+11, 8, 8); // little star block
+}
+function drawBanana(x,y){
+  ctx.save();
+  ctx.translate(x+10, y+10);
+  ctx.rotate(-0.5);
+  ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 7; ctx.lineCap="round";
+  ctx.beginPath(); ctx.arc(0, -3, 9, 0.4, 2.7); ctx.stroke();
+  ctx.strokeStyle = "#e0a800"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, -3, 9, 0.5, 2.6); ctx.stroke();
+  ctx.restore();
+}
+function drawDoor(d){
+  if (d.open){
+    // open door: frame + green glow
+    ctx.fillStyle = "rgba(79,192,110,.25)";
+    ctx.fillRect(d.x, d.y, d.w, d.h);
+    ctx.fillStyle = "#5b3a1e";
+    ctx.fillRect(d.x, d.y, 4, d.h);
+    ctx.fillRect(d.x+d.w-4, d.y, 4, d.h);
+    ctx.fillRect(d.x, d.y, d.w, 4);
+    return;
+  }
+  // magic vines above the door (visualises the full-height barrier)
+  const sway = Math.sin(frameCount*0.05 + d.x)*2;
+  ctx.fillStyle = "rgba(47,143,78,.8)";
+  for (let vy=0; vy<d.y; vy+=18){
+    ctx.fillRect(d.x+6+sway, vy, 4, 12);
+    ctx.fillRect(d.x+20-sway, vy+8, 4, 12);
+  }
+  ctx.fillStyle = "rgba(79,192,110,.9)";
+  for (let vy=10; vy<d.y; vy+=36) ctx.fillRect(d.x+3+sway, vy, 8, 5);
+  ctx.fillStyle = "#8a5a2b"; ctx.fillRect(d.x, d.y, d.w, d.h);
+  ctx.fillStyle = "#5b3a1e";
+  for (let i=1;i<4;i++) ctx.fillRect(d.x, d.y+i*(d.h/4), d.w, 3);
+  ctx.fillRect(d.x, d.y, d.w, 4);
+  ctx.fillRect(d.x, d.y, 3, d.h); ctx.fillRect(d.x+d.w-3, d.y, 3, d.h);
+  // lock with "?" — the question door
+  ctx.fillStyle = "#ffd23f";
+  ctx.fillRect(d.x+9, d.y+22, 14, 16);
+  ctx.fillStyle = "#5b3a1e";
+  ctx.font = "bold 13px Verdana";
+  ctx.fillText("?", d.x+13, d.y+34);
+}
+function drawKoko(p){
+  const f = Math.floor(p.frame)%2;
+  ctx.save();
+  ctx.translate(Math.round(p.x + p.w/2), Math.round(p.y));
+  ctx.scale(p.facing, 1);
+  const FUR="#7a4a21", DARK="#5b3517", FACE="#f2cf9a", EYE="#241609";
+  // tail
+  ctx.fillStyle = FUR;
+  ctx.fillRect(-15, 14, 5, 5);
+  ctx.fillRect(-18, 10, 5, 5);
+  ctx.fillRect(-16, 6, 5, 5);
+  // legs
+  const legOff = p.onGround ? (f? 3 : -3) : 2;
+  ctx.fillStyle = DARK;
+  ctx.fillRect(-8 + legOff, 22, 6, 6);
+  ctx.fillRect( 2 - legOff, 22, 6, 6);
+  // body
+  ctx.fillStyle = FUR;  ctx.fillRect(-10, 12, 20, 12);
+  ctx.fillStyle = FACE; ctx.fillRect(-5, 15, 10, 8);
+  // arms
+  const armOff = p.onGround ? (f? -2 : 2) : -4;
+  ctx.fillStyle = DARK;
+  ctx.fillRect(-12, 14 + armOff, 4, 8);
+  ctx.fillRect(  8, 14 - armOff, 4, 8);
+  // head
+  ctx.fillStyle = FUR;  ctx.fillRect(-8, -2, 16, 14);
+  ctx.fillStyle = FACE; ctx.fillRect(-5,  2, 12, 9);
+  // ears
+  ctx.fillStyle = FUR;  ctx.fillRect(-12, 1, 5, 6); ctx.fillRect(7, 1, 5, 6);
+  ctx.fillStyle = FACE; ctx.fillRect(-11, 3, 3, 3); ctx.fillRect(8, 3, 3, 3);
+  // eyes + smile
+  ctx.fillStyle = EYE;
+  ctx.fillRect(-2, 4, 2, 3); ctx.fillRect(4, 4, 2, 3);
+  ctx.fillRect(0, 9, 4, 1);
+  ctx.restore();
+}
+
+/* ---------------- Main loop ---------------- */
+function loop(){
+  update();
+  draw();
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
