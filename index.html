@@ -286,6 +286,79 @@
     font-size:clamp(26px,7vw,36px);
   }
   @media (pointer:coarse){ #touch{display:block;} }
+  /* ---------- world select (title screen, once a save exists) ---------- */
+  #world-row{
+    display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;
+  }
+  .world-card{
+    cursor:pointer;
+    width:clamp(150px,30vw,220px);
+    font-family:inherit; color:var(--cream); text-align:center;
+    background:linear-gradient(180deg, #245c3c, #16402b);
+    border:3px solid var(--leaf);
+    border-radius:14px;
+    padding:9px 10px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .world-card:hover, .world-card:focus-visible{
+    transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.4); outline:3px solid var(--banana);
+  }
+  .world-card .w-name{display:block; font-weight:bold; letter-spacing:1px; color:var(--banana); font-size:clamp(13px,2.6vw,17px);}
+  .world-card .w-sub{display:block; margin-top:3px; font-size:clamp(9px,1.9vw,12px); color:#a8c9b5;}
+  .world-card.castle{background:linear-gradient(180deg,#4a3a86,#2c2250); border-color:#9b7be8;}
+  .world-card.castle .w-name{color:#ffe08a;}
+  .world-card.castle .w-sub{color:#cdbff2;}
+  .world-card.locked{
+    cursor:not-allowed; filter:grayscale(1); opacity:.55;
+    background:linear-gradient(180deg,#444746,#2b2e2d); border-color:#6d726f;
+  }
+  .world-card.locked:hover, .world-card.locked:focus-visible{transform:none; box-shadow:none; outline:none;}
+  #pick-head{margin-bottom:6px;}
+  #pick-head .subtitle{margin-bottom:2px; color:#ffe08a;}
+  #btn-pick-back{padding:6px 20px; margin:2px; font-size:clamp(12px,2.4vw,15px); box-shadow:0 3px 0 var(--wood-dark);}
+  /* ---------- world 2 · Castle of Grammar: recolour the page chrome ---------- */
+  body.w2{
+    --jungle:#1c1738; --jungle2:#2a2150; --leaf:#7b5bd6; --leaf-bright:#b79cff;
+    --wood:#4a4672; --wood-dark:#2f2a52; --cream:#fff4e0;
+    background:radial-gradient(1200px 600px at 50% -10%, #3b2468 0%, #1c1233 55%, #0f0a1f 100%);
+  }
+  body.w2 .overlay{background:rgba(16,10,34,.86);}
+  body.w2 #modal{background:rgba(16,10,34,.74);}
+  body.w2 #modal .sign{background:linear-gradient(180deg,#6a6f96,#4b4f74);}
+  body.w2 .btn.secondary{background:linear-gradient(180deg,#8a6be0,#5b3fb0);}
+  body.w2 footer{color:#6f64a3;}
+  /* ---------- world complete (gold + purple, deliberately unlike LEVEL COMPLETE) ---------- */
+  #screen-world{
+    z-index:6; overflow:hidden;
+    background:radial-gradient(900px 520px at 50% 35%, rgba(130,70,215,.65), rgba(24,10,52,.97) 72%);
+  }
+  #screen-world .logo{
+    color:#ffe08a; transform:none;
+    text-shadow:3px 3px 0 #5a2fa8, 0 0 24px rgba(255,214,90,.8);
+    animation:worldPop .7s ease-out;
+  }
+  @keyframes worldPop{ 0%{transform:scale(.4); opacity:0;} 70%{transform:scale(1.08);} 100%{transform:scale(1); opacity:1;} }
+  #screen-world .subtitle{color:#e2c8ff;}
+  #screen-world .stat{background:rgba(255,224,138,.1); border-color:rgba(255,214,90,.6);}
+  #screen-world .stat .v{color:#ffe08a;}
+  #screen-world .stat .l{color:#cdb8f5;}
+  #screen-world .hint{color:#cdb8f5;}
+  #screen-world .big-emoji{filter:drop-shadow(0 0 14px rgba(255,214,90,.9)); font-size:clamp(34px,7vw,56px); margin-bottom:0;}
+  #screen-world .stats{gap:10px; margin:8px 0 10px;}
+  #screen-world .stat{padding:8px 12px;}
+  #screen-world .subtitle{margin-bottom:6px;}
+  .btn.gold{
+    background:linear-gradient(180deg,#ffe08a,#e0a82e);
+    border-color:#5a2fa8; box-shadow:0 5px 0 #5a2fa8;
+  }
+  .btn.gold:hover{box-shadow:0 7px 0 #5a2fa8;}
+  .btn.gold:active{box-shadow:0 2px 0 #5a2fa8;}
+  .spark{
+    position:absolute; width:8px; height:8px; background:#ffe08a;
+    clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+    opacity:0; animation:twinkle 2.4s ease-in-out infinite; pointer-events:none;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:0; transform:scale(.4) rotate(0);} 50%{opacity:1; transform:scale(1.5) rotate(45deg);} }
   footer{
     margin-top:8px; font-size:11px; color:#5f8a70; letter-spacing:1px;
   }
@@ -311,6 +384,22 @@
     <div id="resume-row" class="hidden">
       <button class="btn" id="btn-continue">Continue ▶<span class="btn-sub" id="continue-sub"></span></button>
       <button class="btn secondary" id="btn-newgame">New game</button>
+    </div>
+    <!-- world select: shown with the resume row once a save exists -->
+    <div id="world-row" class="hidden">
+      <button class="world-card" id="btn-world-1" type="button">
+        <span class="w-name" id="w1-name">🌴 World 1</span>
+        <span class="w-sub" id="w1-sub">Jungle Trail</span>
+      </button>
+      <button class="world-card castle locked" id="btn-world-2" type="button" aria-disabled="true">
+        <span class="w-name" id="w2-name">🔒 World 2</span>
+        <span class="w-sub" id="w2-sub">Finish World 1 to unlock</span>
+      </button>
+    </div>
+    <!-- shown above the tier cards when a world is being started fresh -->
+    <div id="pick-head" class="hidden">
+      <p class="subtitle" id="pick-title">Castle of Grammar · choose your tier</p>
+      <button class="btn secondary" id="btn-pick-back" type="button">◀ Back</button>
     </div>
     <div class="tier-row" id="tier-row">
       <button class="tier-card" data-tier="0">
@@ -350,7 +439,7 @@
     <div class="big-emoji">🎉</div>
     <h1 class="logo" style="font-size:clamp(22px,5vw,40px)">LEVEL COMPLETE!</h1>
     <div class="stats">
-      <div class="stat"><div class="v" id="lv-bananas">0</div><div class="l">Bananas</div></div>
+      <div class="stat"><div class="v" id="lv-bananas">0</div><div class="l" id="lv-label">Bananas</div></div>
       <div class="stat"><div class="v" id="lv-acc">100%</div><div class="l">Correct answers</div></div>
     </div>
     <button class="btn" id="btn-next">Next level ▶</button>
@@ -369,7 +458,7 @@
   <div class="overlay hidden" id="screen-win">
     <div class="big-emoji">🏆</div>
     <h1 class="logo" style="font-size:clamp(24px,5.5vw,44px)">QUEST COMPLETE!</h1>
-    <p class="subtitle">Koko made it through the whole jungle!</p>
+    <p class="subtitle" id="win-sub">Koko made it through the whole jungle!</p>
     <div class="stats">
       <div class="stat"><div class="v" id="win-bananas">0</div><div class="l">Total bananas</div></div>
       <div class="stat"><div class="v" id="win-acc">100%</div><div class="l">Correct answers</div></div>
@@ -377,6 +466,30 @@
       <div class="stat"><div class="v" id="win-best">100%</div><div class="l" id="win-best-l">Best score</div></div>
     </div>
     <button class="btn" id="btn-again">Play again</button>
+  </div>
+
+  <!-- World complete (worlds that are not the last one lead back to the menu) -->
+  <div class="overlay hidden" id="screen-world">
+    <i class="spark" style="left:8%;top:14%;animation-delay:0s"></i>
+    <i class="spark" style="left:22%;top:72%;animation-delay:.5s"></i>
+    <i class="spark" style="left:35%;top:10%;animation-delay:1.1s"></i>
+    <i class="spark" style="left:48%;top:84%;animation-delay:1.6s"></i>
+    <i class="spark" style="left:62%;top:16%;animation-delay:.3s"></i>
+    <i class="spark" style="left:76%;top:68%;animation-delay:.9s"></i>
+    <i class="spark" style="left:90%;top:22%;animation-delay:1.4s"></i>
+    <i class="spark" style="left:12%;top:44%;animation-delay:1.9s"></i>
+    <i class="spark" style="left:86%;top:48%;animation-delay:.7s"></i>
+    <div class="big-emoji">🏰</div>
+    <h1 class="logo" style="font-size:clamp(24px,5.5vw,46px)">WORLD COMPLETE!</h1>
+    <p class="subtitle">The Castle of Grammar is yours!</p>
+    <div class="stats">
+      <div class="stat"><div class="v" id="wc-gems">0</div><div class="l">Gems</div></div>
+      <div class="stat"><div class="v" id="wc-acc">100%</div><div class="l">Grammar correct</div></div>
+      <div class="stat"><div class="v" id="wc-tier">Explorer</div><div class="l">Tier</div></div>
+      <div class="stat"><div class="v" id="wc-best">100%</div><div class="l" id="wc-best-l">Best score</div></div>
+    </div>
+    <p class="hint" style="margin-bottom:10px">More worlds are on the way — the Cave of Reading and the Volcano of Writing!</p>
+    <button class="btn gold" id="btn-world-menu">World select ▶</button>
   </div>
 
   <!-- New game confirmation -->
@@ -406,12 +519,12 @@
   </div>
 </div>
 
-<footer>KOKO'S QUEST v1.2 · NAPLAN-aligned literacy practice</footer>
+<footer>KOKO'S QUEST v1.3 · NAPLAN-aligned literacy practice</footer>
 
 <script>
 "use strict";
 /* =====================================================================
-   KOKO'S QUEST v1.2
+   KOKO'S QUEST v1.3
    Single-file 2D pixel platformer for NAPLAN literacy practice.
    Everything is Canvas-drawn — no external assets.
    ===================================================================== */
@@ -446,6 +559,14 @@ const TIERS = [
       {q:"Choose the correct word: We ___ happy.",opts:["is","are","am"],a:1},
       {q:"Pick the correct sentence.",opts:["My name is Koko.","my name is koko.","My Name Is koko."],a:0},
       {q:"Choose the correct word: She ___ a book.",opts:["reading","reads","red"],a:1},
+    ],
+    // extra grammar for the Castle of Grammar (world 2 only)
+    grammarExtra: [
+      {q:"Choose the correct word: The cats ___ on the mat.",opts:["sit","sits","sitting"],a:0},
+      {q:"Which word is a doing word (verb)? \"The bird sings.\"",opts:["bird","sings","the"],a:1},
+      {q:"Choose the correct word: Tom and Sam ___ friends.",opts:["is","are","am"],a:1},
+      {q:"Pick the correct sentence.",opts:["Is it raining?","Is it raining.","is it raining"],a:0},
+      {q:"Choose the correct word: She has two ___.",opts:["cat","cats","cates"],a:1},
     ]
   },
   {
@@ -475,6 +596,13 @@ const TIERS = [
       {q:"Choose the correct word: I didn't do ___.",opts:["nothing","anything","nothings"],a:1},
       {q:"Where does the comma go? \"I bought apples bananas and grapes.\"",opts:["after apples","after and","no comma needed"],a:0},
       {q:"Choose the correct word: This book is ___ than that one.",opts:["gooder","better","more good"],a:1},
+    ],
+    grammarExtra: [
+      {q:"Choose the correct word: Mum made ___ a sandwich.",opts:["I","me","my"],a:1},
+      {q:"Which word is an adjective? \"The tiny frog hopped away.\"",opts:["tiny","frog","hopped"],a:0},
+      {q:"Choose the correct word: He ran ___ than his sister.",opts:["faster","more fast","fastest"],a:0},
+      {q:"Pick the correct sentence.",opts:["Where did you put my shoes?","Where did you put my shoes.","where did you put my shoes?"],a:0},
+      {q:"Choose the correct word: We ___ our homework yesterday.",opts:["finish","finished","finishing"],a:1},
     ]
   },
   {
@@ -504,6 +632,13 @@ const TIERS = [
       {q:"Choose the correct word: She spoke ___ than her brother.",opts:["more quietly","quietlier","most quietly"],a:0},
       {q:"Which word is an adverb? \"Koko quickly climbed the ancient tower.\"",opts:["quickly","ancient","tower"],a:0},
       {q:"Choose the correct word: The books ___ on the shelf are mine.",opts:["who are","which is","that are"],a:2},
+    ],
+    grammarExtra: [
+      {q:"Pick the correct sentence.",opts:["Me and Tom went to the shops.","Tom and I went to the shops.","Tom and me went to the shops."],a:1},
+      {q:"Which word is a conjunction? \"Koko climbed the tree because she was hungry.\"",opts:["because","climbed","tree"],a:0},
+      {q:"Choose the correct word: The movie was ___ than the book.",opts:["worse","more worse","worst"],a:0},
+      {q:"Choose the correct word: We should have ___ the teacher.",opts:["saw","seen","see"],a:1},
+      {q:"Choose the correct word: ___ book is this? It has no name on it.",opts:["Who's","Whose","Whos"],a:1},
     ]
   }
 ];
@@ -572,6 +707,78 @@ const LEVELS = [
   ]}
 ];
 
+/* ---------------- World 2 · Castle of Grammar ----------------
+   Same legend as above (gems replace bananas), plus moving platforms — world 2 only:
+     hhh   a horizontal stone platform (one run = one platform, starting where drawn)
+     ( )   leftmost / rightmost cell it may occupy (same row as the h-run)
+     vvv   a vertical stone platform
+     n  s  top / bottom limit of its track (same column as the first v)
+   Platforms are one-way (land from above, jump up through from below) and a
+   closed door stops them exactly as it stops Koko.                          */
+const LEVELS_CASTLE = [
+  { name:"1 · Castle Gate", map:[
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "............................................................................",
+    "...........................B.....................B..........................",
+    "..........................===...................===.........................",
+    "....B.B.....B......B.B................B........B............B.B...B.........",
+    ".P.......D....................^^...D...................D..............F.....",
+    "###############(hhh...)##################...################################",
+    "###############........##################...################################"
+  ]},
+  { name:"2 · Tower Stairs", map:[
+    "............................................................................................",
+    "............................................................................................",
+    "............................................................................................",
+    "................................................B.B.B.....B.B.B............B....B...B.......",
+    ".......................................................D......^^..............D.........F...",
+    "..........................................n..#########################...###################",
+    ".............................................#########################...###################",
+    "...........................................B.#########################...###################",
+    "..........................................vvv#########################...###################",
+    "...................B.B.....B.B....B.B........#########################...###################",
+    ".....................................D.......#########################...###################",
+    "..............B.B.######(hhh...)##########s..#########################...###################",
+    "...............D..######........######################################...###################",
+    "...B.B...B..############........######################################...###################",
+    ".P.....D....############........######################################...###################",
+    "########################........######################################...###################",
+    "########################........######################################...###################"
+  ]},
+  { name:"3 · Hall of Words", map:[
+    "................................................................................................................",
+    "................................................................................................................",
+    "................................................................................................................",
+    "................................................................................................................",
+    "................................................................................................................",
+    "................................................................................................................",
+    "................................................................................................................",
+    "............................................................................B......B....B......B.....B..B.......",
+    "................................................................................D....^^...........D........F....",
+    "......................................................................n..#################...###################",
+    ".........................................................................#################...###################",
+    "........................B..B...........................................B.#################...###################",
+    "...........................................B...B..B...................vvv#################...###################",
+    "...B.....B........B.(hhh.......)..B...B...............B...B....B....B....#################...###################",
+    ".P....D....^^...D....^^^^^^^^^^.....D.......(...hhh)....D...^^....D......#################...###################",
+    "########################################(hhh...)....##################s..#################...###################",
+    "########################################............######################################...###################"
+  ]}
+];
+const WORLDS = [
+  { name:"Jungle Trail",      levels:LEVELS },
+  { name:"Castle of Grammar", levels:LEVELS_CASTLE }
+];
+
 /* ---------------- DOM refs ---------------- */
 const cv = document.getElementById("cv");
 const ctx = cv.getContext("2d");
@@ -585,13 +792,14 @@ const hud = $("hud"), heartsEl = $("hearts"), bananasEl = $("bananas-hud"),
 
 /* ---------------- Game state ---------------- */
 const TILE = 32, GRAV = 0.55, JUMP_V = -11.6, MOVE = 3.2, MAX_FALL = 13;
-let state = "title";          // title | play | question | levelDone | over | win
+let state = "title";          // title | play | question | levelDone | over | win | worldDone
 let tier = 0;
+let worldIdx = 0;             // 0 = Jungle Trail, 1 = Castle of Grammar
 let levelIdx = 0;
 let G = null;                 // parsed level data
 let player = null;
 let camX = 0;
-let hearts = 3, bananasTotal = 0, bananasLevel = 0;
+let hearts = 3, bananasTotal = 0, bananasLevel = 0;   // "bananas" = collectibles: bananas in world 1, gems in world 2
 let answered = 0, correct = 0, streak = 0, streakToastShown = false;
 let qQueue = [];              // shuffled question queue for this tier
 let activeDoor = null;
@@ -607,38 +815,62 @@ const keys = {left:false, right:false, jump:false, jumpHeld:false};
    access is guarded — the game then simply runs without saving.            */
 const SAVE_KEY = "kokosQuestProgressV1";
 const Save = (()=>{
-  const data = {v:1, muted:false, progress:null};
+  // v1.3 only ADDS fields: world 1 keeps using `progress` exactly as before;
+  // `unlocked`, `world` and `world2` are new and optional (older saves just lack them).
+  const data = {
+    v:1, muted:false,
+    progress:null,        // world 1 run
+    unlocked:1,           // number of worlds unlocked (2 once World 1 has been finished)
+    world:0,              // world last played (Continue resumes it)
+    world2:null           // world 2 run (same shape as `progress`, with `gems` instead of `bananas`)
+  };
   const int = (v, lo, hi, d)=>{
     v = Math.floor(Number(v));
     return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d;
   };
-  function cleanProgress(r){                       // never trust what comes back from storage
+  // never trust what comes back from storage; `w` = which world's level count to clamp to
+  function cleanRun(r, w){
     if (!r || typeof r !== "object") return null;
     const best = Array.isArray(r.bestAcc) ? r.bestAcc : [];
     const answered = int(r.answered, 0, 1e6, 0);
     const tier = int(r.tier, 0, TIERS.length-1, 0);
-    return {
+    const run = {
       tier,
-      levelsCleared: int(r.levelsCleared, 0, LEVELS.length-1, 0),   // levels already done in `tier`
-      highestTier:   Math.max(tier, int(r.highestTier, 0, TIERS.length-1, 0)),   // highest tier unlocked so far
-      bananas:       int(r.bananas, 0, 1e6, 0),                     // lifetime total
+      levelsCleared: int(r.levelsCleared, 0, WORLDS[w].levels.length-1, 0),   // levels already done in `tier`
       answered,
       correct:       Math.min(int(r.correct, 0, 1e6, 0), answered),
       bestAcc:       TIERS.map((_,i)=> best[i]==null ? null : int(best[i], 0, 100, null))
     };
+    if (w === 0){
+      run.highestTier = Math.max(tier, int(r.highestTier, 0, TIERS.length-1, 0));   // highest tier unlocked so far
+      run.bananas = int(r.bananas, 0, 1e6, 0);                                      // lifetime total
+    } else {
+      run.gems = int(r.gems, 0, 1e6, 0);                                            // gems in the current run
+    }
+    return run;
   }
   try{
     const o = JSON.parse(localStorage.getItem(SAVE_KEY));
     if (o && typeof o === "object"){
       data.muted = o.muted === true;
-      data.progress = cleanProgress(o.progress);
+      data.progress = cleanRun(o.progress, 0);
+      data.world2 = cleanRun(o.world2, 1);
+      data.unlocked = int(o.unlocked, 1, WORLDS.length, 1);
+      data.world = int(o.world, 0, WORLDS.length-1, 0);
+      // a v1.2 save that already finished a World 1 tier counts as "World 1 done"
+      if (data.progress && data.progress.bestAcc.some(v=>v!=null)) data.unlocked = 2;
+      if (data.world2) data.unlocked = 2;
+      if (data.world === 1 && !data.world2) data.world = 0;
     }
   }catch(e){ /* missing, corrupt or blocked → start fresh */ }
   function write(){
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); }catch(e){}
   }
-  // "New game": drop progress but keep the sound preference
-  function clearProgress(){ data.progress = null; write(); }
+  // "New game": drop all progress (both worlds) but keep the sound preference
+  function clearProgress(){
+    data.progress = null; data.world2 = null; data.unlocked = 1; data.world = 0;
+    write();
+  }
   return {data, write, clearProgress};
 })();
 
@@ -649,7 +881,7 @@ const Save = (()=>{
    of the same effect are throttled.                                              */
 const Sfx = (()=>{
   const MAX_VOICES = 40;
-  const MIN_GAP = {jump:80, banana:40, click:30};      // ms between repeats of a cheap effect
+  const MIN_GAP = {jump:80, banana:40, gem:40, click:30};      // ms between repeats of a cheap effect
   const noiseBufs = new WeakMap();
   const lastAt = {};
   let ac = null, bus = null, muted = Save.data.muted, active = [];
@@ -747,6 +979,24 @@ const Sfx = (()=>{
       [523.25, 659.25, 783.99, 1046.5].forEach(f=>
         tone(c,o,{t:t+1.8, type:"triangle", f0:f, dur:.95, vol:.24, atk:.02, sus:.6}));
     }},
+    gem:    {n:3, dur:.4, low:true, fn:(c,o,t)=>{               // glassy two-note sparkle (world 2 pickup)
+      tone(c,o,{t,        type:"sine",     f0:2093, dur:.3, vol:.4,  atk:.004});
+      tone(c,o,{t:t+.06,  type:"sine",     f0:2637, dur:.3, vol:.34, atk:.004});
+      tone(c,o,{t,        type:"triangle", f0:4186, dur:.12, vol:.1, atk:.003});
+    }},
+    worldcomplete:{n:34, dur:3.9, fn:(c,o,t)=>{                // regal fanfare, longer than level/victory
+      const brass = (tt, f, d, v)=>{
+        tone(c,o,{t:tt, type:"sawtooth", f0:f, dur:d, vol:v*0.6, lp:1800, atk:.02, sus:.7});
+        tone(c,o,{t:tt, type:"triangle", f0:f, dur:d, vol:v,     atk:.02, sus:.7});
+      };
+      [[392,0,.2],[523.25,.2,.2],[659.25,.4,.2],[783.99,.6,.55],                 // rising call
+       [698.46,1.2,.2],[783.99,1.4,.2],[880,1.6,.2],[1046.5,1.8,.6]]             // answer
+        .forEach(([f,d,l])=> brass(t+d, f, l, .2));
+      [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach(f=>                       // crowning chord
+        brass(t+2.5, f, 1.3, .15));
+      [2093, 2637, 3136, 4186].forEach((f,i)=>                                   // sparkles on top
+        tone(c,o,{t:t+2.55+i*.1, type:"sine", f0:f, dur:.7, vol:.14, atk:.004}));
+    }},
     click:  {n:1, dur:.06, low:true, fn:(c,o,t)=>{
       tone(c,o,{t, type:"triangle", f0:900, f1:600, dur:.05, vol:.35, atk:.002, sus:.6});
     }}
@@ -826,10 +1076,12 @@ function shuffle(arr){
 }
 function refillQueue(){
   const t = TIERS[tier];
-  const pool = [
-    ...t.spelling.map(it => ({type:"Spelling", q:SPELL_Q, opts:it.opts, a:it.a})),
-    ...t.grammar .map(it => ({type:"Grammar",  q:it.q,    opts:it.opts, a:it.a}))
-  ];
+  const pool = worldIdx === 1
+    ? [...t.grammar, ...t.grammarExtra].map(it => ({type:"Grammar", q:it.q, opts:it.opts, a:it.a}))   // Castle: grammar only
+    : [
+        ...t.spelling.map(it => ({type:"Spelling", q:SPELL_Q, opts:it.opts, a:it.a})),
+        ...t.grammar .map(it => ({type:"Grammar",  q:it.q,    opts:it.opts, a:it.a}))
+      ];
   qQueue = shuffle(pool);
 }
 function nextQuestion(){
@@ -844,16 +1096,17 @@ function showToast(msg, ms=3200){
 }
 
 /* ---------------- Level parsing ---------------- */
+const curLevels = ()=>WORLDS[worldIdx].levels;
 function loadLevel(idx){
-  const src = LEVELS[idx];
+  const src = curLevels()[idx];
   const rows = src.map.slice();
   const w = Math.max(...rows.map(r=>r.length));
   // pad each row with its own last character so ground rows extend with '#'
   const grid = rows.map(r => r.padEnd(w, r.length ? r[r.length-1] : ".").split(""));
 
   G = {
-    name: src.name, w, h: grid.length, grid,
-    doors: [], bananas: [], spikes: [], flag: null, start: {x:64,y:0}
+    name: src.name, world: worldIdx, w, h: grid.length, grid,
+    doors: [], bananas: [], spikes: [], flag: null, start: {x:64,y:0}, movers: []
   };
   for (let y=0; y<G.h; y++){
     for (let x=0; x<w; x++){
@@ -865,9 +1118,35 @@ function loadLevel(idx){
       else if (c==="F"){ G.flag = {x:x*TILE+8, y:(y-2)*TILE}; grid[y][x]="."; }
     }
   }
+  // moving platforms: an h-run / v-run is one platform; ( ) and n s mark the ends of its track
+  for (let y=0; y<G.h; y++){
+    for (let x=0; x<w; x++){
+      const c = grid[y][x];
+      if (c!=="h" && c!=="v") continue;
+      let x2 = x; while (x2+1 < w && grid[y][x2+1] === c) x2++;
+      const m = {x:x*TILE, y:y*TILE, w:(x2-x+1)*TILE, h:16, dir:1, wait:0, dx:0, dy:0,
+                 axis: c==="h" ? "x" : "y", min:0, max:0};
+      if (c==="h"){
+        let a = x, b = x2;
+        for (let i=x-1; i>=0; i--)  if (grid[y][i]==="(") { a = i; break; }
+        for (let i=x2+1; i<w; i++)  if (grid[y][i]===")") { b = i; break; }
+        m.min = a*TILE; m.max = (b+1)*TILE - m.w;
+      } else {
+        let top = y, bot = y;
+        for (let j=y-1; j>=0; j--)  if (grid[j][x]==="n") { top = j; break; }
+        for (let j=y+1; j<G.h; j++) if (grid[j][x]==="s") { bot = j; break; }
+        m.min = top*TILE; m.max = bot*TILE;
+      }
+      for (let i=x; i<=x2; i++) grid[y][i] = ".";
+      G.movers.push(m);
+    }
+  }
+  for (let y=0; y<G.h; y++)                       // track markers are not tiles
+    for (let x=0; x<w; x++)
+      if ("()ns".includes(grid[y][x])) grid[y][x] = ".";
   player = {
     x:G.start.x, y:G.start.y, w:22, h:28,
-    vx:0, vy:0, onGround:false, facing:1, frame:0, invuln:0
+    vx:0, vy:0, onGround:false, facing:1, frame:0, invuln:0, plat:null, air:0
   };
   player.checkpoint = {x:player.x, y:player.y};
   camX = 0; bananasLevel = 0; particles = [];
@@ -912,6 +1191,44 @@ function collideAxis(p, dx, dy){
     else if (dy < 0){ p.y = s.y + s.h; p.vy = 0; }
   }
 }
+/* ---- moving platforms (world 2) ----
+   One-way slabs: Koko lands on them from above and can jump up through them from
+   below, so they never crush or trap him. They glide along a fixed track, pause at
+   each end, and carry whoever stands on them. A closed question door is a wall for
+   platforms too, so they can never be used to get past a question.              */
+const MOVER_SPEED = {x:1.3, y:1.0}, MOVER_DWELL = 45;     // px per frame; frames to pause at the ends
+function updateMovers(){
+  for (const m of G.movers){
+    m.dx = 0; m.dy = 0;
+    if (m.wait > 0){ m.wait--; continue; }
+    const v = m.dir * MOVER_SPEED[m.axis];
+    let nx = m.x + (m.axis==="x" ? v : 0), ny = m.y + (m.axis==="y" ? v : 0);
+    let end = false;
+    const pos = m.axis==="x" ? nx : ny;
+    if (pos <= m.min || pos >= m.max){
+      const c = Math.max(m.min, Math.min(m.max, pos));
+      if (m.axis==="x") nx = c; else ny = c;
+      end = true;
+    }
+    for (const d of G.doors){
+      if (!d.open && rectsOverlap({x:nx, y:ny, w:m.w, h:m.h}, {x:d.x, y:0, w:d.w, h:d.y+d.h+m.h})){
+        nx = m.x; ny = m.y; end = true; break;
+      }
+    }
+    m.dx = nx - m.x; m.dy = ny - m.y; m.x = nx; m.y = ny;
+    if (end){ m.dir = -m.dir; m.wait = MOVER_DWELL; }
+  }
+}
+function landOnMovers(p, bottomBefore){
+  if (p.vy < 0) return;                                   // rising: pass up through the slab
+  for (const m of G.movers){
+    if (p.x + p.w <= m.x + 2 || p.x >= m.x + m.w - 2) continue;
+    if (bottomBefore <= m.y + 4 && p.y + p.h >= m.y){     // feet were above the top, now at/below it
+      p.y = m.y - p.h; p.vy = 0; p.onGround = true; p.plat = m;
+      return;
+    }
+  }
+}
 function hurt(){
   if (player.invuln > 0) return;
   hearts--;
@@ -922,6 +1239,7 @@ function hurt(){
   player.x = player.checkpoint.x;
   player.y = player.checkpoint.y;
   player.vx = 0; player.vy = 0;
+  player.plat = null; player.air = 0;
   player.invuln = 60;
 }
 function update(){
@@ -930,22 +1248,36 @@ function update(){
   const p = player;
   if (p.invuln > 0) p.invuln--;
 
+  // moving platforms glide first; Koko rides the one he stood on
+  // (walls and closed doors still stop him, so he can't be carried past a question)
+  updateMovers();
+  const ride = p.plat; p.plat = null;
+  if (ride){
+    collideAxis(p, ride.dx, 0);
+    p.y = ride.y - p.h;
+  }
+
   // horizontal input
-  p.vx = (keys.right?MOVE:0) - (keys.left?MOVE:0);
-  if (p.vx !== 0) p.facing = Math.sign(p.vx);
+  const inVx = (keys.right?MOVE:0) - (keys.left?MOVE:0);
+  if (inVx !== 0) p.facing = Math.sign(inVx);
   // jump
   if (keys.jump && p.onGround && !keys.jumpHeld){
     p.vy = JUMP_V; p.onGround = false; keys.jumpHeld = true;
+    p.air = ride ? ride.dx : 0;                 // jumping off a platform keeps its momentum
     Sfx.play("jump");
     burst(p.x+p.w/2, p.y+p.h, "#cfe9d8", 5);
   }
   if (!keys.jump) keys.jumpHeld = false;
+  p.vx = inVx + p.air;
   // gravity
   p.vy = Math.min(p.vy + GRAV, MAX_FALL);
 
   p.onGround = false;
   collideAxis(p, p.vx, 0);
+  const bottomBefore = p.y + p.h;
   collideAxis(p, 0, p.vy);
+  landOnMovers(p, bottomBefore);
+  if (p.onGround) p.air = 0;
 
   if (p.vx !== 0 && p.onGround) p.frame += 0.22;
 
@@ -961,8 +1293,8 @@ function update(){
     if (b.got) continue;
     if (rectsOverlap(p, {x:b.x, y:b.y, w:20, h:20})){
       b.got = true; bananasLevel++; bananasTotal++;
-      Sfx.play("banana");
-      burst(b.x+10, b.y+10, "#ffd23f", 10);
+      Sfx.play(worldIdx === 1 ? "gem" : "banana");
+      burst(b.x+10, b.y+10, worldIdx === 1 ? "#7fe6ff" : "#ffd23f", 10);
       updateHUD();
     }
   }
@@ -975,7 +1307,8 @@ function update(){
   }
 
   // flag
-  if (G.flag && rectsOverlap(p, {x:G.flag.x, y:G.flag.y, w:16, h:64}))
+  // (the castle banner reaches the floor, so walking into it is enough)
+  if (G.flag && rectsOverlap(p, {x:G.flag.x, y:G.flag.y, w:16, h: worldIdx === 1 ? 96 : 64}))
     levelComplete();
 
   // camera follows
@@ -1028,7 +1361,7 @@ function answer(btn, isCorrect){
     setTimeout(()=>{
       activeDoor.open = true;
       player.checkpoint = {x:activeDoor.x + activeDoor.w + 4, y:activeDoor.y + activeDoor.h - player.h};
-      burst(activeDoor.x+16, activeDoor.y+32, "#4fc06e", 16);
+      burst(activeDoor.x+16, activeDoor.y+32, worldIdx === 1 ? "#ffd34d" : "#4fc06e", 16);
       modal.classList.add("hidden");
       state = "play";
       if (streak >= 5 && tier < 2 && !streakToastShown){
@@ -1055,16 +1388,19 @@ function answer(btn, isCorrect){
 }
 
 /* ---------------- Flow ---------------- */
-// `from` = saved progress when resuming; omitted for a fresh start from the tier cards
-function startGame(t, from){
+// `from` = saved run when resuming; omitted for a fresh start from the tier cards.
+// `w` = which world to play (0 Jungle, 1 Castle).
+function startGame(t, from, w=0){
+  worldIdx = w;
   tier = t;
   levelIdx = from ? from.levelsCleared : 0;
   hearts = 3; streak = 0; streakToastShown = false;
-  bananasTotal = from ? from.bananas : 0;
+  bananasTotal = from ? (w === 1 ? from.gems : from.bananas) : 0;
   answered = from ? from.answered : 0;
   correct  = from ? from.correct  : 0;
   refillQueue();
   tierHudEl.textContent = TIERS[tier].name;
+  document.body.classList.toggle("w2", w === 1);
   $("screen-title").classList.add("hidden");
   $("game-wrap").classList.add("in-game");
   hud.style.display = "flex";
@@ -1072,17 +1408,20 @@ function startGame(t, from){
   state = "play";
 }
 function accuracyPct(){ return answered ? Math.round(correct/answered*100) : 100; }
-let lastResult = {best:100, improved:false};     // shown on the win screen
+let lastResult = {best:100, improved:false};     // shown on the win / world-complete screens
+let justUnlocked = false;                        // did finishing World 1 just open World 2?
 // Called when a level is cleared: write down how far the player got.
 // Finishing the last level of a tier unlocks the next tier and resets the run counters.
 function saveLevelComplete(){
-  const last = levelIdx >= LEVELS.length-1;
-  const p = Save.data.progress || {
-    tier, levelsCleared:0, highestTier:tier, bananas:0, answered:0, correct:0,
-    bestAcc: TIERS.map(()=>null)
-  };
-  p.highestTier = Math.max(p.highestTier, tier);
-  p.bananas = bananasTotal;
+  const last = levelIdx >= curLevels().length-1;
+  const castle = worldIdx === 1;
+  const fresh = ()=>({
+    tier, levelsCleared:0, answered:0, correct:0, bestAcc: TIERS.map(()=>null),
+    ...(castle ? {gems:0} : {highestTier:tier, bananas:0})
+  });
+  const p = (castle ? Save.data.world2 : Save.data.progress) || fresh();
+  if (castle) p.gems = bananasTotal;
+  else { p.highestTier = Math.max(p.highestTier, tier); p.bananas = bananasTotal; }
   if (!last){
     p.tier = tier; p.levelsCleared = levelIdx + 1;
     p.answered = answered; p.correct = correct;
@@ -1091,20 +1430,36 @@ function saveLevelComplete(){
     p.bestAcc[tier] = old == null ? acc : Math.max(old, acc);
     lastResult = {best:p.bestAcc[tier], improved: old != null && acc > old};
     const next = Math.min(tier+1, TIERS.length-1);   // Champion just replays itself
-    p.highestTier = Math.max(p.highestTier, next);
+    if (!castle) p.highestTier = Math.max(p.highestTier, next);
     p.tier = next; p.levelsCleared = 0; p.answered = 0; p.correct = 0;
+    if (castle) p.gems = 0;                          // the next run starts with an empty gem count
+    else if (Save.data.unlocked < 2){ Save.data.unlocked = 2; justUnlocked = true; }   // World 1 beaten → World 2 opens
   }
-  Save.data.progress = p;
+  if (castle) Save.data.world2 = p; else Save.data.progress = p;
+  Save.data.world = worldIdx;
   Save.write();
 }
 function levelComplete(){
+  const last = levelIdx >= curLevels().length-1;
+  if (worldIdx === 1 && last){ saveLevelComplete(); worldComplete(); return; }   // castle finale has its own screen
   state = "levelDone";
   Sfx.play("levelcomplete");
   saveLevelComplete();
   $("lv-bananas").textContent = bananasLevel;
+  $("lv-label").textContent = worldIdx === 1 ? "Gems" : "Bananas";
   $("lv-acc").textContent = accuracyPct()+"%";
-  $("btn-next").textContent = (levelIdx < LEVELS.length-1) ? "Next level ▶" : "Finish quest 🏆";
+  $("btn-next").textContent = (!last) ? "Next level ▶" : "Finish quest 🏆";
   $("screen-level").classList.remove("hidden");
+}
+function worldComplete(){
+  state = "worldDone";
+  Sfx.play("worldcomplete");
+  $("wc-gems").textContent = bananasTotal;
+  $("wc-acc").textContent = accuracyPct()+"%";
+  $("wc-tier").textContent = TIERS[tier].name;
+  $("wc-best").textContent = lastResult.best+"%";
+  $("wc-best-l").textContent = lastResult.improved ? "🌟 New best!" : "Best score";
+  $("screen-world").classList.remove("hidden");
 }
 function gameOver(){
   state = "over";
@@ -1119,16 +1474,19 @@ function winGame(){
   $("win-tier").textContent = TIERS[tier].name;
   $("win-best").textContent = lastResult.best+"%";
   $("win-best-l").textContent = lastResult.improved ? "🌟 New best!" : "Best score";
+  // finishing World 1 for the first time swaps the subtitle for the unlock news (same height)
+  $("win-sub").textContent = justUnlocked ? "🏰 World 2 unlocked: Castle of Grammar!" : "Koko made it through the whole jungle!";
+  justUnlocked = false;
   $("screen-win").classList.remove("hidden");
 }
 function updateHUD(){
   heartsEl.textContent = "♥ ".repeat(Math.max(hearts,0)).trim() + (hearts<3 ? " " + "♡ ".repeat(3-hearts).trim() : "");
-  bananasEl.textContent = "🍌 " + bananasTotal;
+  bananasEl.textContent = (worldIdx === 1 ? "💎 " : "🍌 ") + bananasTotal;
 }
 
 $("btn-next").onclick = ()=>{
   $("screen-level").classList.add("hidden");
-  if (levelIdx < LEVELS.length-1){
+  if (levelIdx < curLevels().length-1){
     levelIdx++;
     hearts = Math.min(hearts+1, 3);      // small mercy heart between levels
     loadLevel(levelIdx);
@@ -1148,24 +1506,73 @@ function backToTitle(){
   state = "title";
   hud.style.display = "none";
   $("game-wrap").classList.remove("in-game");
+  document.body.classList.remove("w2");          // the menu always wears the jungle palette
+  pickWorld = null;
   renderTitle();
   $("screen-title").classList.remove("hidden");
 }
-// With a save: Continue / New game. Without one: the three tier cards.
+$("btn-world-menu").onclick = ()=>{ $("screen-world").classList.add("hidden"); backToTitle(); };
+
+/* ---- title screen ----
+   No save yet  → the three tier cards (World 1).
+   With a save  → Continue / New game plus the world cards; World 2 stays greyed out
+                  and locked until World 1 has been finished.
+   Starting a world with no run yet shows the tier cards again (`pickWorld` = that world). */
+let pickWorld = null;
+function currentRun(){                           // the run Continue resumes: the world played last
+  const d = Save.data;
+  if (d.world === 1 && d.world2) return {w:1, run:d.world2};
+  if (d.progress) return {w:0, run:d.progress};
+  if (d.world2)   return {w:1, run:d.world2};
+  return null;
+}
+function runSummary(w, run){
+  return `${TIERS[run.tier].name} · Level ${run.levelsCleared+1} of ${WORLDS[w].levels.length} · ` +
+         (w === 1 ? `💎 ${run.gems}` : `🍌 ${run.bananas}`);
+}
 function renderTitle(){
-  const p = Save.data.progress;
-  $("tier-row").classList.toggle("hidden", !!p);
-  $("resume-row").classList.toggle("hidden", !p);
-  if (p) $("continue-sub").textContent =
-    `${TIERS[p.tier].name} · Level ${p.levelsCleared+1} of ${LEVELS.length} · 🍌 ${p.bananas}`;
+  const d = Save.data, cur = currentRun();
+  const picking = pickWorld !== null;
+  $("tier-row").classList.toggle("hidden", !!cur && !picking);
+  $("resume-row").classList.toggle("hidden", !cur || picking);
+  $("world-row").classList.toggle("hidden", !cur || picking);
+  $("pick-head").classList.toggle("hidden", !picking);
+  if (picking) $("pick-title").textContent =
+    (pickWorld === 1 ? "🏰 " : "🌴 ") + WORLDS[pickWorld].name + " · choose your tier";
+  if (!cur) return;
+  const open2 = d.unlocked >= 2;
+  $("continue-sub").textContent = (open2 ? WORLDS[cur.w].name + " · " : "") + runSummary(cur.w, cur.run);
+  $("w1-sub").textContent = "Jungle Trail" + (open2 ? " ✓" : "");
+  const c2 = $("btn-world-2");
+  c2.classList.toggle("locked", !open2);
+  c2.setAttribute("aria-disabled", String(!open2));
+  $("w2-name").textContent = (open2 ? "🏰" : "🔒") + " World 2";
+  $("w2-sub").textContent = !open2 ? "Finish World 1 to unlock"
+    : "Castle of Grammar" + (d.world2 ? ` · Level ${d.world2.levelsCleared+1} of ${WORLDS[1].levels.length}` : "");
 }
 document.querySelectorAll(".tier-card").forEach(b=>{
-  b.onclick = ()=>startGame(parseInt(b.dataset.tier,10));
+  b.onclick = ()=>{
+    const w = pickWorld ?? 0;
+    pickWorld = null;
+    startGame(parseInt(b.dataset.tier,10), null, w);
+  };
 });
 $("btn-continue").onclick = ()=>{
-  const p = Save.data.progress;
-  if (p) startGame(p.tier, p);
+  const cur = currentRun();
+  if (cur) startGame(cur.run.tier, cur.run, cur.w);
 };
+$("btn-world-1").onclick = ()=>{
+  const p = Save.data.progress;
+  if (p) startGame(p.tier, p, 0);
+  else { pickWorld = 0; renderTitle(); }
+};
+$("btn-world-2").onclick = ()=>{
+  if (Save.data.unlocked < 2){ showToast("🔒 Finish World 1 to unlock the Castle of Grammar!"); return; }
+  const r = Save.data.world2;
+  if (r) startGame(r.tier, r, 1);
+  else { pickWorld = 1; renderTitle(); }
+};
+$("btn-pick-back").onclick = ()=>{ pickWorld = null; renderTitle(); };
 const confirmEl = $("screen-confirm");
 $("btn-newgame").onclick = ()=>{
   confirmEl.classList.remove("hidden");
@@ -1221,25 +1628,30 @@ $("game-wrap").addEventListener("touchmove", e=>{
 /* ---------------- Rendering ---------------- */
 function draw(){
   const W = cv.width, H = cv.height;
-  // sky
-  const sky = ctx.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,"#aee6f5"); sky.addColorStop(.6,"#8fd7ea"); sky.addColorStop(1,"#cdeee0");
-  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
-  // sun
-  ctx.fillStyle = "#fff2b0";
-  ctx.beginPath(); ctx.arc(W-120, 80, 42, 0, 6.29); ctx.fill();
+  const castle = !!G && G.world === 1;             // each world paints with its own palette
+  if (castle){
+    drawCastleBackdrop(W, H);
+  } else {
+    // sky
+    const sky = ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,"#aee6f5"); sky.addColorStop(.6,"#8fd7ea"); sky.addColorStop(1,"#cdeee0");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+    // sun
+    ctx.fillStyle = "#fff2b0";
+    ctx.beginPath(); ctx.arc(W-120, 80, 42, 0, 6.29); ctx.fill();
 
-  if (!G){ requestAnimationFrame(loop); return; }
+    if (!G){ requestAnimationFrame(loop); return; }
 
-  // clouds (slow parallax)
-  ctx.fillStyle = "rgba(255,255,255,.85)";
-  for (const c of clouds){
-    const cx = ((c.x - camX*0.15) % (G.w*TILE) + G.w*TILE) % (G.w*TILE) - 60;
-    drawCloud(cx, c.y, c.s);
+    // clouds (slow parallax)
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    for (const c of clouds){
+      const cx = ((c.x - camX*0.15) % (G.w*TILE) + G.w*TILE) % (G.w*TILE) - 60;
+      drawCloud(cx, c.y, c.s);
+    }
+    // far jungle silhouettes
+    drawHills(camX*0.3, "#5aa878", H-150, 90);
+    drawHills(camX*0.55 + 300, "#3c8a5c", H-110, 70);
   }
-  // far jungle silhouettes
-  drawHills(camX*0.3, "#5aa878", H-150, 90);
-  drawHills(camX*0.55 + 300, "#3c8a5c", H-110, 70);
 
   ctx.save();
   ctx.translate(-Math.round(camX), 0);
@@ -1249,22 +1661,28 @@ function draw(){
   for (let ty=0; ty<G.h; ty++){
     for (let tx=Math.max(0,tx0); tx<=Math.min(G.w-1,tx1); tx++){
       const c = G.grid[ty][tx];
-      if (c==="#") drawGround(tx*TILE, ty*TILE, ty===0 || G.grid[ty-1][tx]!=="#");
-      else if (c==="=") drawPlatform(tx*TILE, ty*TILE);
+      if (c==="#"){
+        const top = ty===0 || G.grid[ty-1][tx]!=="#";
+        if (castle) drawBrick(tx*TILE, ty*TILE, top); else drawGround(tx*TILE, ty*TILE, top);
+      }
+      else if (c==="=") { if (castle) drawStoneLedge(tx*TILE, ty*TILE); else drawPlatform(tx*TILE, ty*TILE); }
     }
   }
+  // moving platforms (world 2): track first, then the slab
+  for (const m of G.movers) drawRail(m);
+  for (const m of G.movers) drawMover(m);
   // spikes
-  for (const s of G.spikes) drawSpikes(s);
+  for (const s of G.spikes) { if (castle) drawIronSpikes(s); else drawSpikes(s); }
   // flag
-  if (G.flag) drawFlag(G.flag);
-  // bananas
-  for (const b of G.bananas){
-    if (b.got) continue;
+  if (G.flag) { if (castle) drawBanner(G.flag); else drawFlag(G.flag); }
+  // bananas / gems
+  G.bananas.forEach((b, i)=>{
+    if (b.got) return;
     const bob = Math.sin(frameCount*0.06 + b.bob)*3;
-    drawBanana(b.x, b.y + bob);
-  }
+    if (castle) drawGem(b.x, b.y + bob, i); else drawBanana(b.x, b.y + bob);
+  });
   // doors
-  for (const d of G.doors) drawDoor(d);
+  for (const d of G.doors) { if (castle) drawCastleDoor(d); else drawDoor(d); }
   // particles
   for (const pt of particles){
     ctx.globalAlpha = Math.max(pt.life/40, 0);
@@ -1377,6 +1795,181 @@ function drawDoor(d){
   ctx.fillStyle = "#5b3a1e";
   ctx.font = "bold 13px Verdana";
   ctx.fillText("?", d.x+13, d.y+34);
+}
+/* ---------------- World 2 painters (Castle of Grammar) ---------------- */
+function drawCastleSkyline(off, baseY, color, kind){
+  const period = kind === 1 ? 520 : 360;
+  const o = ((off % period) + period) % period;
+  for (let x = -o - period; x < cv.width; x += period){
+    ctx.fillStyle = color;
+    if (kind === 1){                                // far towers with pointed roofs
+      ctx.fillRect(x+40, baseY-110, 56, 330);
+      ctx.beginPath(); ctx.moveTo(x+34, baseY-110); ctx.lineTo(x+68, baseY-165); ctx.lineTo(x+102, baseY-110); ctx.fill();
+      ctx.fillRect(x+120, baseY-60, 120, 280);
+      for (let i=0;i<4;i++) ctx.fillRect(x+120+i*32, baseY-72, 18, 14);
+      ctx.fillRect(x+300, baseY-90, 46, 310);
+      ctx.beginPath(); ctx.moveTo(x+296, baseY-90); ctx.lineTo(x+323, baseY-140); ctx.lineTo(x+350, baseY-90); ctx.fill();
+    } else {                                        // nearer wall: battlements + lit arched windows
+      ctx.fillRect(x, baseY, period, 300);
+      for (let i=0; i<period; i+=36) ctx.fillRect(x+i, baseY-14, 22, 14);
+      ctx.fillStyle = "rgba(255,176,70,.85)";
+      for (let i=60; i<period; i+=120){
+        ctx.fillRect(x+i, baseY+30, 16, 26);
+        ctx.beginPath(); ctx.arc(x+i+8, baseY+30, 8, Math.PI, 0); ctx.fill();
+      }
+    }
+  }
+}
+function drawCastleBackdrop(W, H){
+  const sky = ctx.createLinearGradient(0,0,0,H);   // dusk: deep purple → rose → orange
+  sky.addColorStop(0,"#241553"); sky.addColorStop(.38,"#6b2f86"); sky.addColorStop(.68,"#d4547a"); sky.addColorStop(1,"#ffa45c");
+  ctx.fillStyle = sky; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = "#fff6d8";                       // stars
+  for (let i=0;i<36;i++){
+    ctx.globalAlpha = .3 + .5*Math.abs(Math.sin(frameCount*0.03 + i));
+    const sz = i%5===0 ? 3 : 2;
+    ctx.fillRect((i*173 + 41) % W, (i*61 + 17) % (H*0.42), sz, sz);
+  }
+  ctx.globalAlpha = 1;
+  const sx = W-210, sy = H-200;                    // low glowing sun
+  const glow = ctx.createRadialGradient(sx, sy, 10, sx, sy, 170);
+  glow.addColorStop(0,"rgba(255,226,150,.95)"); glow.addColorStop(.35,"rgba(255,170,90,.45)"); glow.addColorStop(1,"rgba(255,140,90,0)");
+  ctx.fillStyle = glow; ctx.fillRect(sx-180, sy-180, 360, 360);
+  ctx.fillStyle = "#ffe6a8"; ctx.beginPath(); ctx.arc(sx, sy, 46, 0, 6.29); ctx.fill();
+  ctx.fillStyle = "rgba(255,170,190,.30)";         // wispy dusk streaks (slow parallax)
+  for (const c of clouds){
+    const cx = ((c.x - camX*0.15) % (G.w*TILE) + G.w*TILE) % (G.w*TILE) - 80;
+    ctx.fillRect(cx, c.y*0.9 + 30, 120*c.s, 6);
+    ctx.fillRect(cx + 30*c.s, c.y*0.9 + 40, 90*c.s, 4);
+  }
+  drawCastleSkyline(camX*0.25, H-190, "#3a2a66", 1);
+  drawCastleSkyline(camX*0.5 + 120, H-150, "#241a47", 2);
+}
+function drawBrick(x, y, top){
+  ctx.fillStyle = "#585c80"; ctx.fillRect(x, y, TILE, TILE);
+  ctx.fillStyle = "#3d405f";                       // mortar
+  ctx.fillRect(x, y+15, TILE, 2); ctx.fillRect(x, y+30, TILE, 2);
+  ctx.fillRect(x+15, y, 2, 15); ctx.fillRect(x+7, y+17, 2, 13); ctx.fillRect(x+23, y+17, 2, 13);
+  ctx.fillStyle = "#6c7198";                       // lit corner of each brick
+  ctx.fillRect(x+1, y+1, 13, 2); ctx.fillRect(x+17, y+1, 14, 2);
+  ctx.fillRect(x+1, y+18, 5, 2); ctx.fillRect(x+9, y+18, 13, 2); ctx.fillRect(x+25, y+18, 6, 2);
+  if (top){
+    ctx.fillStyle = "#8c92bd"; ctx.fillRect(x, y, TILE, 6);
+    ctx.fillStyle = "#b4b9dc"; ctx.fillRect(x, y, TILE, 2);
+    ctx.fillStyle = "#4a4e72"; ctx.fillRect(x, y+6, TILE, 2);
+  }
+}
+function drawStoneLedge(x, y){
+  ctx.fillStyle = "#7c82a8"; ctx.fillRect(x, y+4, TILE, 14);
+  ctx.fillStyle = "#464a70"; ctx.fillRect(x, y+14, TILE, 4);
+  ctx.fillStyle = "#b4b9dc"; ctx.fillRect(x, y+4, TILE, 3);
+  ctx.fillStyle = "#464a70"; ctx.fillRect(x+15, y+7, 2, 7);
+}
+function drawRail(m){                              // the fixed track the platform follows
+  ctx.fillStyle = "rgba(20,12,44,.55)";
+  if (m.axis === "x"){
+    const y = m.y + 7, x0 = m.min, x1 = m.max + m.w;
+    for (let x = x0; x < x1; x += 12) ctx.fillRect(x, y, 6, 2);
+    ctx.fillRect(x0, y-6, 3, 14); ctx.fillRect(x1-3, y-6, 3, 14);
+  } else {
+    const x = m.x + m.w/2 - 1, y0 = m.min, y1 = m.max + m.h;
+    for (let y = y0; y < y1; y += 12) ctx.fillRect(x, y, 2, 6);
+    ctx.fillRect(m.x, y0-3, m.w, 3); ctx.fillRect(m.x, y1, m.w, 3);
+  }
+}
+function drawMover(m){
+  const x = Math.round(m.x), y = Math.round(m.y);
+  ctx.fillStyle = "#9aa0cc"; ctx.fillRect(x, y, m.w, m.h);          // stone slab
+  ctx.fillStyle = "#5a5f8c"; ctx.fillRect(x, y+m.h-4, m.w, 4);
+  ctx.fillStyle = "#ffd36b"; ctx.fillRect(x, y, m.w, 3);            // gold trim: "this one moves"
+  for (let rx = x+4; rx < x+m.w-2; rx += 16) ctx.fillRect(rx, y+8, 3, 3);
+  ctx.fillStyle = "#2f2a52";                                         // arrows along its track
+  const cx = x + m.w/2, cy = y + 8;
+  ctx.beginPath();
+  if (m.axis === "x"){
+    ctx.moveTo(cx-14, cy); ctx.lineTo(cx-8, cy-4); ctx.lineTo(cx-8, cy+4);
+    ctx.moveTo(cx+14, cy); ctx.lineTo(cx+8, cy-4); ctx.lineTo(cx+8, cy+4);
+  } else {
+    ctx.moveTo(cx-10, cy+3); ctx.lineTo(cx-6, cy-3); ctx.lineTo(cx-2, cy+3);
+    ctx.moveTo(cx+2, cy-3);  ctx.lineTo(cx+6, cy+3); ctx.lineTo(cx+10, cy-3);
+  }
+  ctx.fill();
+}
+function drawIronSpikes(s){
+  const n = s.w/8;
+  for (let i=0;i<n;i++){
+    const x = s.x + i*8;
+    ctx.fillStyle = "#b7bdd6";
+    ctx.beginPath(); ctx.moveTo(x, s.y+s.h); ctx.lineTo(x+4, s.y); ctx.lineTo(x+4, s.y+s.h); ctx.fill();
+    ctx.fillStyle = "#7a809f";
+    ctx.beginPath(); ctx.moveTo(x+4, s.y+s.h); ctx.lineTo(x+4, s.y); ctx.lineTo(x+8, s.y+s.h); ctx.fill();
+  }
+  ctx.fillStyle = "#4b4f72"; ctx.fillRect(s.x, s.y+s.h-3, s.w, 3);
+}
+function drawBanner(f){                            // purple & gold banner; the pole reaches the floor
+  ctx.fillStyle = "#c9a24a"; ctx.fillRect(f.x, f.y, 5, 96);
+  ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(f.x+2.5, f.y-2, 4, 0, 6.29); ctx.fill();
+  const wave = Math.sin(frameCount*0.1)*3;
+  ctx.beginPath();
+  ctx.moveTo(f.x+5, f.y+4); ctx.lineTo(f.x+46+wave, f.y+4); ctx.lineTo(f.x+37+wave, f.y+15);
+  ctx.lineTo(f.x+46+wave, f.y+26); ctx.lineTo(f.x+5, f.y+26); ctx.closePath();
+  ctx.fillStyle = "#7a3fd0"; ctx.fill();
+  ctx.strokeStyle = "#ffd36b"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#ffe08a"; ctx.fillRect(f.x+14, f.y+11, 8, 8);
+}
+const GEM_COLORS = [["#38c8f0","#a8eeff","#1b86b8"], ["#e55bd8","#ffb3f4","#a02f98"], ["#4ee08d","#b4ffd2","#23985a"]];
+function drawGem(x, y, k){                         // faceted diamond, three colours in rotation
+  const [base, light, dark] = GEM_COLORS[k % 3];
+  ctx.save();
+  ctx.translate(x+10, y+10);
+  ctx.fillStyle = base;
+  ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(9,-3); ctx.lineTo(0,10); ctx.lineTo(-9,-3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = light;
+  ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-9,-3); ctx.lineTo(0,-3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath(); ctx.moveTo(0,-3); ctx.lineTo(9,-3); ctx.lineTo(0,10); ctx.closePath(); ctx.fill();
+  if (Math.sin(frameCount*0.12 + k*2) > 0.75){     // little glint
+    ctx.fillStyle = "#fff"; ctx.fillRect(-5,-7,3,3); ctx.fillRect(-4,-9,1,7); ctx.fillRect(-7,-6,7,1);
+  }
+  ctx.restore();
+}
+function drawLantern(x, y, flick){
+  ctx.fillStyle = "#6c7198"; ctx.fillRect(x+3, y-6, 2, 6);           // hanging chain
+  const g = ctx.createRadialGradient(x+4, y+7, 1, x+4, y+7, 28);     // warm glow
+  g.addColorStop(0, `rgba(255,190,90,${(.5*flick).toFixed(2)})`); g.addColorStop(1, "rgba(255,190,90,0)");
+  ctx.fillStyle = g; ctx.fillRect(x-24, y-21, 56, 56);
+  ctx.fillStyle = "#3a3a52"; ctx.fillRect(x, y, 8, 3); ctx.fillRect(x, y+11, 8, 3);
+  ctx.fillStyle = `rgba(255,${Math.round(190+30*flick)},90,.95)`; ctx.fillRect(x+1, y+3, 6, 8);
+}
+function drawCastleDoor(d){                        // iron-framed wooden gate between two lanterns
+  const flick = 0.8 + 0.2*Math.sin(frameCount*0.15 + d.x);
+  drawLantern(d.x-11, d.y+8, flick);
+  drawLantern(d.x+d.w+3, d.y+8, flick);
+  if (d.open){
+    ctx.fillStyle = "rgba(255,196,90,.2)"; ctx.fillRect(d.x, d.y, d.w, d.h);
+    ctx.fillStyle = "#2c2748"; ctx.fillRect(d.x+4, d.y+10, d.w-8, d.h-10);          // dark doorway
+    ctx.fillStyle = "#8d93b5"; ctx.fillRect(d.x, d.y, 4, d.h); ctx.fillRect(d.x+d.w-4, d.y, 4, d.h); ctx.fillRect(d.x, d.y, d.w, 10);
+    ctx.fillStyle = "#c4c9e2";                                                       // raised portcullis tips
+    for (let i=0;i<4;i++){ ctx.fillRect(d.x+6+i*6, d.y+10, 2, 7); }
+    return;
+  }
+  // iron portcullis above the gate = the full-height barrier (nothing gets over a question door)
+  const shimmer = .12 + .05*Math.sin(frameCount*0.08 + d.x);
+  ctx.fillStyle = `rgba(150,120,230,${shimmer.toFixed(2)})`; ctx.fillRect(d.x, 0, d.w, d.y);
+  ctx.fillStyle = "rgba(110,116,160,.9)";
+  for (let i=0;i<4;i++) ctx.fillRect(d.x+4+i*8, 0, 3, d.y);
+  for (let vy=20; vy<d.y; vy+=44) ctx.fillRect(d.x, vy, d.w, 3);
+  // the gate: planks in an iron frame
+  ctx.fillStyle = "#5a3a2a"; ctx.fillRect(d.x, d.y, d.w, d.h);
+  ctx.fillStyle = "#43291d";
+  for (let i=1;i<4;i++) ctx.fillRect(d.x+i*8-1, d.y+4, 2, d.h-4);
+  ctx.fillStyle = "#9aa0c0";
+  ctx.fillRect(d.x, d.y, d.w, 5); ctx.fillRect(d.x, d.y, 3, d.h); ctx.fillRect(d.x+d.w-3, d.y, 3, d.h);
+  ctx.fillRect(d.x, d.y+14, d.w, 4); ctx.fillRect(d.x, d.y+d.h-16, d.w, 4);
+  ctx.fillStyle = "#e8ecff";
+  for (const ry of [d.y+15, d.y+d.h-15]) for (const rx of [d.x+5, d.x+d.w-8]) ctx.fillRect(rx, ry, 3, 2);
+  ctx.fillStyle = "#ffd34d"; ctx.fillRect(d.x+9, d.y+24, 14, 16);                   // lock plate with "?"
+  ctx.fillStyle = "#2f2a52"; ctx.font = "bold 13px Verdana"; ctx.fillText("?", d.x+13, d.y+36);
 }
 function drawKoko(p){
   const f = Math.floor(p.frame)%2;
